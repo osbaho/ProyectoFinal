@@ -1,0 +1,231 @@
+@startuml
+
+' ENUMS
+enum ManaCondition {
+    None
+    ByTime
+    ByInteraction
+    ByAbility
+}
+
+enum ResourceType {
+    None
+    Health
+    Mana
+}
+
+' INTERFACES
+namespace Interfaces {
+    interface IHealth {
+        +TakeDamage(amount : int) : void
+        +Heal(amount : int) : void
+    }
+
+    interface IResourceUser {
+        +UseResource(amount : int) : void
+        +RecoverResource(amount : int) : void
+        +GetCurrentResource() : int
+        +GetMaxResource() : int
+    }
+
+    interface IAbilityUser {
+        +AddAbility(ability : IAbility) : void
+        +RemoveAbility(ability : IAbility) : void
+        +UseAbility(index : int) : void
+        +Abilities : IReadOnlyList<IAbility>
+        +TakeDamage(amount : int) : void
+        +OnAbilityAdded : Action<IAbility>
+        +OnAbilityRemoved : Action<IAbility>
+    }
+
+    interface IAbility {
+        +Name : string
+        +Icon : Sprite
+        +CanUse(user : IAbilityUser) : bool
+        +Use(user : IAbilityUser) : void
+        +Effects : IReadOnlyList<IAbilityEffect>
+    }
+
+    interface IAbilityEffect {
+        +Apply(user : IAbilityUser, target : IAbilityUser) : void
+    }
+}
+
+' BASE COMPONENTS
+abstract class StatComponent {
+    -maxValue : int
+    -currentValue : int
+    +MaxValue : int
+    +CurrentValue : int
+    +OnValueChanged : Action<int, int>
+    +SetValue(value : int) : void
+}
+
+class HealthComponent {
+    +MaxHealth : int
+    +CurrentHealth : int
+    +OnHealthChanged : Action<int, int>
+    +TakeDamage(amount : int) : void
+    +Heal(amount : int) : void
+    +SetHealth(value : int) : void
+}
+
+class ManaComponent {
+    +MaxMana : int
+    +CurrentMana : int
+    +Condition : ManaCondition
+    +OnManaChanged : Action<int, int>
+    +UseResource(amount : int) : void
+    +RecoverResource(amount : int) : void
+    +SetMana(value : int) : void
+    +GetCurrentResource() : int
+    +GetMaxResource() : int
+    +UpdateByCondition(deltaTime : float) : void
+}
+
+' STAT HOLDERS
+class StatHolder {
+    -stats : List<StatComponent>
+    +StatHolder(params StatComponent[])
+    +AddStat(stat : StatComponent) : void
+    +RemoveStat(stat : StatComponent) : void
+    +GetStat<T>() : T
+    +GetStats<T>() : IEnumerable<T>
+    +HasStat<T>() : bool
+    +GetAllStats() : IEnumerable<StatComponent>
+}
+
+class PlayableStatHolder {
+    +Abilities : IReadOnlyList<IAbility>
+    +OnAbilityAdded : Action<IAbility>
+    +OnAbilityRemoved : Action<IAbility>
+    +PlayableStatHolder(initialAbilities : IEnumerable<IAbility> = null, params StatComponent[])
+    +AddAbility(ability : IAbility) : void
+    +RemoveAbility(ability : IAbility) : void
+    +ClearAbilities() : void
+    +UseAbility(index : int) : void
+    +TakeDamage(amount : int) : void
+}
+
+class NonPlayableStatHolder {
+    +OnDeath : Action
+    +NonPlayableStatHolder(params StatComponent[])
+    +Start() : void
+    +OnDestroy() : void
+}
+
+class SoulMage {
+    +resourceType : ResourceType
+    +SoulMage(health : HealthComponent, mana : ManaComponent = null)
+}
+
+class ManaKnight {
+    +resourceType : ResourceType
+    +ManaKnight(health : HealthComponent = null, mana : ManaComponent = null)
+}
+
+' ABILITIES
+abstract class AbilityBase {
+    +Name : string
+    +Icon : Sprite
+    +Effects : IReadOnlyList<IAbilityEffect>
+    +CanUse(user : IAbilityUser) : bool
+    +Use(user : IAbilityUser) : void
+}
+
+class HealAbility {
+    +HealAbility(name : string, icon : Sprite, effects : IEnumerable<IAbilityEffect>)
+    +CanUse(user : IAbilityUser) : bool
+}
+
+class AreaDamageAbility {
+    +AreaDamageAbility(name : string, icon : Sprite, effects : IEnumerable<IAbilityEffect>)
+    +CanUse(user : IAbilityUser) : bool
+}
+
+class ProjectileAbility {
+    +ProjectileAbility(name : string, icon : Sprite, effects : IEnumerable<IAbilityEffect>)
+    +CanUse(user : IAbilityUser) : bool
+}
+
+class DamageEffect {
+    -amount : int
+    +DamageEffect(amount : int)
+    +Apply(user : IAbilityUser, target : IAbilityUser) : void
+}
+
+' SYSTEM ABILITY
+class SystemAbility {
+    +AllAbilities : List<IAbility>
+    +SelectedAbilityIndex : int
+    +GetAbilityByName(name : string) : IAbility
+    +AddAbility(ability : IAbility) : void
+    +RemoveAbility(ability : IAbility) : void
+    +GetSelectedAbility() : IAbility
+    +UseSelectedAbility(user : IAbilityUser) : void
+    +ReportAbilityUsed(ability : IAbility) : void
+    +GetAbilityUseCountByIndex(index : int) : int
+    +GetAbilityUseCount(ability : IAbility) : int
+    +Instance : SystemAbility
+}
+
+' UTILITY/OTHER
+class ResourceArea {
+    +resourceAmount : int
+    +OnTriggerEnter(other : Collider) : void
+}
+
+class ProjectileDamage {
+    -damage : int
+    +SetDamage(dmg : int) : void
+    +OnTriggerEnter(other : Collider) : void
+}
+
+class AreaDamage {
+    -damage : int
+    +SetDamage(dmg : int) : void
+    +OnTriggerEnter(other : Collider) : void
+}
+
+class DamageArea {
+    +damage : int
+    +OnTriggerEnter(other : Collider) : void
+}
+
+' RELATIONS
+
+StatComponent <|-- HealthComponent
+StatComponent <|-- ManaComponent
+
+HealthComponent ..|> Interfaces.IHealth
+ManaComponent ..|> Interfaces.IResourceUser
+
+StatHolder <|-- PlayableStatHolder
+StatHolder <|-- NonPlayableStatHolder
+
+StatHolder *-- StatComponent : "stats"  ' Composición fuerte: StatHolder contiene StatComponent
+
+PlayableStatHolder ..|> Interfaces.IAbilityUser
+PlayableStatHolder o-- Interfaces.IAbility
+
+SoulMage --|> PlayableStatHolder
+ManaKnight --|> PlayableStatHolder
+
+AbilityBase ..|> Interfaces.IAbility
+HealAbility --|> AbilityBase
+AreaDamageAbility --|> AbilityBase
+ProjectileAbility --|> AbilityBase
+
+AbilityBase o-- Interfaces.IAbilityEffect
+DamageEffect ..|> Interfaces.IAbilityEffect
+
+SystemAbility o-- Interfaces.IAbility
+
+ResourceArea o-- Interfaces.IResourceUser
+ProjectileDamage o-- Interfaces.IHealth
+AreaDamage o-- Interfaces.IHealth
+DamageArea o-- Interfaces.IHealth
+
+ManaComponent o-- ManaCondition : Condition
+
+@enduml
