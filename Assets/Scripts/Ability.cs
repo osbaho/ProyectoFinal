@@ -1,7 +1,7 @@
 using UnityEngine;
 using Interfaces;
 
-// [System.Obsolete("Usa AbilityBase y el sistema de IAbility para nuevas habilidades.")]
+[System.Obsolete("Usa AbilityBase y el sistema de IAbility para nuevas habilidades.")]
 public abstract class Ability : ScriptableObject
 {
     public string abilityName;

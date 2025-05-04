@@ -4,27 +4,23 @@ using System;
 /// <summary>
 /// Portador no jugable: solo emplea vida, destruido al morir.
 /// </summary>
-public class NonPlayableStatHolder : StatHolder
+public class NonPlayableStatHolder : MonoBehaviour
 {
+    [Header("Stats")]
+    public HealthComponent Health;
+
     public event Action OnDeath;
 
-    public NonPlayableStatHolder(params StatComponent[] components)
-        : base(components)
+    private void Start()
     {
-    }
-
-    protected void Start()
-    {
-        var health = GetStat<HealthComponent>();
-        if (health != null)
-            health.OnHealthChanged += CheckDeath;
+        if (Health != null)
+            Health.OnHealthChanged += CheckDeath;
     }
 
     private void OnDestroy()
     {
-        var health = GetStat<HealthComponent>();
-        if (health != null)
-            health.OnHealthChanged -= CheckDeath;
+        if (Health != null)
+            Health.OnHealthChanged -= CheckDeath;
     }
 
     private void CheckDeath(int current, int max)
@@ -32,6 +28,7 @@ public class NonPlayableStatHolder : StatHolder
         if (current <= 0)
         {
             OnDeath?.Invoke();
+            Destroy(gameObject);
         }
     }
 }

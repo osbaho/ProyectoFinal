@@ -14,7 +14,6 @@ public abstract class StatComponent
     {
         this.maxValue = maxValue;
         currentValue = maxValue;
-        OnValueChanged?.Invoke(currentValue, maxValue);
     }
 
     public virtual void SetValue(int value)

@@ -1,6 +1,1 @@
-public enum ResourceType
-{
-    None,
-    Health,
-    Mana
-}
+// Este archivo ya no es necesario. El enum ResourceType ha sido eliminado del proyecto.

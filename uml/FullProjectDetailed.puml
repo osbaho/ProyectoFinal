@@ -8,12 +8,6 @@ enum ManaCondition {
     ByAbility
 }
 
-enum ResourceType {
-    None
-    Health
-    Mana
-}
-
 ' INTERFACES
 namespace Interfaces {
     interface IHealth {
@@ -29,25 +23,10 @@ namespace Interfaces {
     }
 
     interface IAbilityUser {
-        +AddAbility(ability : IAbility) : void
-        +RemoveAbility(ability : IAbility) : void
+        +Abilities : IReadOnlyList<AbilityBase>
+        +AddAbility(ability : AbilityBase) : void
+        +RemoveAbility(ability : AbilityBase) : void
         +UseAbility(index : int) : void
-        +Abilities : IReadOnlyList<IAbility>
-        +TakeDamage(amount : int) : void
-        +OnAbilityAdded : Action<IAbility>
-        +OnAbilityRemoved : Action<IAbility>
-    }
-
-    interface IAbility {
-        +Name : string
-        +Icon : Sprite
-        +CanUse(user : IAbilityUser) : bool
-        +Use(user : IAbilityUser) : void
-        +Effects : IReadOnlyList<IAbilityEffect>
-    }
-
-    interface IAbilityEffect {
-        +Apply(user : IAbilityUser, target : IAbilityUser) : void
     }
 }
 
@@ -84,89 +63,84 @@ class ManaComponent {
 }
 
 ' STAT HOLDERS
-class StatHolder {
-    -stats : List<StatComponent>
-    +StatHolder(params StatComponent[])
-    +AddStat(stat : StatComponent) : void
-    +RemoveStat(stat : StatComponent) : void
-    +GetStat<T>() : T
-    +GetStats<T>() : IEnumerable<T>
-    +HasStat<T>() : bool
-    +GetAllStats() : IEnumerable<StatComponent>
+abstract class BaseStatHolder {
+    +Health : HealthComponent
+    +AddHealth(health : HealthComponent) : void
+    +RemoveHealth() : void
+    +GetHealth() : HealthComponent
+    +Mana : ManaComponent
+    +AddMana(mana : ManaComponent) : void
+    +RemoveMana() : void
+    +GetMana() : ManaComponent
 }
 
 class PlayableStatHolder {
-    +Abilities : IReadOnlyList<IAbility>
-    +OnAbilityAdded : Action<IAbility>
-    +OnAbilityRemoved : Action<IAbility>
-    +PlayableStatHolder(initialAbilities : IEnumerable<IAbility> = null, params StatComponent[])
-    +AddAbility(ability : IAbility) : void
-    +RemoveAbility(ability : IAbility) : void
-    +ClearAbilities() : void
+    +Health : HealthComponent
+    +Mana : ManaComponent
+    +AbilitySystem : SystemAbility
+    +AddAbility(ability : AbilityBase) : void
+    +RemoveAbility(ability : AbilityBase) : void
     +UseAbility(index : int) : void
     +TakeDamage(amount : int) : void
 }
 
 class NonPlayableStatHolder {
+    +Health : HealthComponent
     +OnDeath : Action
-    +NonPlayableStatHolder(params StatComponent[])
-    +Start() : void
-    +OnDestroy() : void
 }
 
 class SoulMage {
-    +resourceType : ResourceType
-    +SoulMage(health : HealthComponent, mana : ManaComponent = null)
+    +UseResource(amount : int) : void
+    +RecoverResource(amount : int) : void
+    +GetCurrentResource() : int
+    +GetMaxResource() : int
 }
 
 class ManaKnight {
-    +resourceType : ResourceType
-    +ManaKnight(health : HealthComponent = null, mana : ManaComponent = null)
+    +UseResource(amount : int) : void
+    +RecoverResource(amount : int) : void
+    +GetCurrentResource() : int
+    +GetMaxResource() : int
 }
 
 ' ABILITIES
 abstract class AbilityBase {
     +Name : string
     +Icon : Sprite
-    +Effects : IReadOnlyList<IAbilityEffect>
-    +CanUse(user : IAbilityUser) : bool
-    +Use(user : IAbilityUser) : void
+    +Cooldown : float
+    +ResourceCost : int
+    +CanUse(user : PlayableStatHolder) : bool
+    +Use(user : PlayableStatHolder) : void
+    +OnAbilityEffect(user : PlayableStatHolder) : void
 }
 
 class HealAbility {
-    +HealAbility(name : string, icon : Sprite, effects : IEnumerable<IAbilityEffect>)
-    +CanUse(user : IAbilityUser) : bool
+    +HealAbility(name : string, icon : Sprite)
+    +CanUse(user : PlayableStatHolder) : bool
+    +Use(user : PlayableStatHolder) : void
+    +OnAbilityEffect(user : PlayableStatHolder) : void
 }
 
 class AreaDamageAbility {
-    +AreaDamageAbility(name : string, icon : Sprite, effects : IEnumerable<IAbilityEffect>)
-    +CanUse(user : IAbilityUser) : bool
+    +AreaDamageAbility(name : string, icon : Sprite, radius : float = 5f, damage : int = 30)
+    +CanUse(user : PlayableStatHolder) : bool
+    +OnAbilityEffect(user : PlayableStatHolder) : void
 }
 
 class ProjectileAbility {
-    +ProjectileAbility(name : string, icon : Sprite, effects : IEnumerable<IAbilityEffect>)
-    +CanUse(user : IAbilityUser) : bool
+    +ProjectileAbility(name : string, icon : Sprite, projectilePrefab : GameObject = null, projectileSpeed : float = 20f)
+    +CanUse(user : PlayableStatHolder) : bool
+    +OnAbilityEffect(user : PlayableStatHolder) : void
 }
 
-class DamageEffect {
-    -amount : int
-    +DamageEffect(amount : int)
-    +Apply(user : IAbilityUser, target : IAbilityUser) : void
-}
-
-' SYSTEM ABILITY
 class SystemAbility {
-    +AllAbilities : List<IAbility>
+    +AllAbilities : List<AbilityBase>
     +SelectedAbilityIndex : int
-    +GetAbilityByName(name : string) : IAbility
-    +AddAbility(ability : IAbility) : void
-    +RemoveAbility(ability : IAbility) : void
-    +GetSelectedAbility() : IAbility
-    +UseSelectedAbility(user : IAbilityUser) : void
-    +ReportAbilityUsed(ability : IAbility) : void
-    +GetAbilityUseCountByIndex(index : int) : int
-    +GetAbilityUseCount(ability : IAbility) : int
-    +Instance : SystemAbility
+    +GetAbilityByName(name : string) : AbilityBase
+    +AddAbility(ability : AbilityBase) : void
+    +RemoveAbility(ability : AbilityBase) : void
+    +GetSelectedAbility() : AbilityBase
+    +UseSelectedAbility(user : PlayableStatHolder) : void
 }
 
 ' UTILITY/OTHER
@@ -182,50 +156,39 @@ class ProjectileDamage {
 }
 
 class AreaDamage {
-    -damage : int
+    +damage : int
+    +damageInterval : float
     +SetDamage(dmg : int) : void
     +OnTriggerEnter(other : Collider) : void
-}
-
-class DamageArea {
-    +damage : int
-    +OnTriggerEnter(other : Collider) : void
+    +OnTriggerExit(other : Collider) : void
+    +Update() : void
 }
 
 ' RELATIONS
 
-StatComponent <|-- HealthComponent
-StatComponent <|-- ManaComponent
+StatComponent <|-- HealthComponent : <<herencia>>
+StatComponent <|-- ManaComponent : <<herencia>>
+BaseStatHolder <|-- PlayableStatHolder : <<herencia>>
+BaseStatHolder <|-- NonPlayableStatHolder : <<herencia>>
 
-HealthComponent ..|> Interfaces.IHealth
-ManaComponent ..|> Interfaces.IResourceUser
+HealthComponent ..|> Interfaces.IHealth : <<implementa>>
+ManaComponent ..|> Interfaces.IResourceUser : <<implementa>>
+SoulMage ..|> Interfaces.IResourceUser : <<implementa>>
+ManaKnight ..|> Interfaces.IResourceUser : <<implementa>>
 
-StatHolder <|-- PlayableStatHolder
-StatHolder <|-- NonPlayableStatHolder
+AbilityBase <|-- HealAbility : <<herencia>>
+AbilityBase <|-- AreaDamageAbility : <<herencia>>
+AbilityBase <|-- ProjectileAbility : <<herencia>>
 
-StatHolder *-- StatComponent : "stats"  ' Composición fuerte: StatHolder contiene StatComponent
+PlayableStatHolder -- SystemAbility : "AbilitySystem (asociación)"
+SystemAbility *-- AbilityBase : "AllAbilities (composición)"
+PlayableStatHolder -- HealthComponent : "Health (asociación)"
+PlayableStatHolder -- ManaComponent : "Mana (asociación)"
+NonPlayableStatHolder -- HealthComponent : "Health (asociación)"
+ManaComponent -- ManaCondition : "Condition (asociación)"
 
-PlayableStatHolder ..|> Interfaces.IAbilityUser
-PlayableStatHolder o-- Interfaces.IAbility
-
-SoulMage --|> PlayableStatHolder
-ManaKnight --|> PlayableStatHolder
-
-AbilityBase ..|> Interfaces.IAbility
-HealAbility --|> AbilityBase
-AreaDamageAbility --|> AbilityBase
-ProjectileAbility --|> AbilityBase
-
-AbilityBase o-- Interfaces.IAbilityEffect
-DamageEffect ..|> Interfaces.IAbilityEffect
-
-SystemAbility o-- Interfaces.IAbility
-
-ResourceArea o-- Interfaces.IResourceUser
-ProjectileDamage o-- Interfaces.IHealth
-AreaDamage o-- Interfaces.IHealth
-DamageArea o-- Interfaces.IHealth
-
-ManaComponent o-- ManaCondition : Condition
+ResourceArea ..> Interfaces.IResourceUser : "OnTriggerEnter (asociación débil)"
+ProjectileDamage ..> Interfaces.IHealth : "OnTriggerEnter (asociación débil)"
+AreaDamage ..> Interfaces.IHealth : "OnTriggerEnter/Exit/Update (asociación débil)"
 
 @enduml
