@@ -1,12 +1,23 @@
-using Base;
+using Holders;
+using Components;
 
 /// <summary>
 /// SoulMage: Portador jugable cuyas habilidades consumen vida.
 /// </summary>
-public class SoulMage : ResourceUserAgent
+public class SoulMage : PlayableStatHolder
 {
-    protected override int CurrentResource => holder.Health != null ? holder.Health.CurrentHealth : 0;
-    protected override int MaxResource => holder.Health != null ? holder.Health.MaxHealth : 0;
-    protected override void ConsumeResource(int amount) => holder.Health?.TakeDamage(amount);
-    protected override void Recover(int amount) => holder.Health?.Heal(amount);
+    public HealthComponent HealthComponent;
+
+    public void UseHealth(int amount)
+    {
+        HealthComponent?.TakeDamage(amount);
+    }
+
+    public void RecoverHealth(int amount)
+    {
+        HealthComponent?.Heal(amount);
+    }
+
+    public int GetCurrentHealth() => HealthComponent != null ? HealthComponent.CurrentValue : 0;
+    public int GetMaxHealth() => HealthComponent != null ? HealthComponent.MaxValue : 0;
 }

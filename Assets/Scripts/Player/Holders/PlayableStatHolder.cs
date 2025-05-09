@@ -16,17 +16,24 @@ namespace Holders
 
     public class PlayableStatHolder : BaseStatHolder
     {
-        [Header("Stats")]
-        public HealthComponent Health;
-        public ManaComponent Mana;
+        [SerializeField] private ManaComponent mana;
 
         [Header("Abilities")]
         public SystemAbility AbilitySystem = new SystemAbility();
 
+        public ManaComponent Mana => mana;
+
         public void Initialize(HealthComponent health = null, ManaComponent mana = null)
         {
-            Health = health;
-            Mana = mana;
+            SetHealth(health);
+            this.mana = mana;
+        }
+
+        protected void SetHealth(HealthComponent health)
+        {
+            typeof(BaseStatHolder)
+                .GetField("health", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .SetValue(this, health);
         }
 
         public void AddAbility(AbilityBase ability)
@@ -45,7 +52,7 @@ namespace Holders
             AbilitySystem.UseSelectedAbility(this);
         }
 
-        public void TakeDamage(int amount)
+        public override void TakeDamage(int amount)
         {
             Health?.TakeDamage(amount);
         }

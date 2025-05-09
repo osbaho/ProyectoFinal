@@ -1,32 +1,28 @@
 using UnityEngine;
 using System;
 using Components;
+using Base;
 
 /// <summary>
 /// Portador no jugable: solo emplea vida, destruido al morir.
 /// </summary>
-public class NonPlayableStatHolder : MonoBehaviour
+public class NonPlayableStatHolder : BaseStatHolder
 {
-    [Header("Stats")]
-    public HealthComponent Health;
-
     public event Action OnDeath;
 
-    private void Start()
+    private void Update()
     {
-        if (Health != null)
-            Health.OnHealthChanged += CheckDeath;
+        // Chequea la muerte cada frame
+        if (Health != null && Health.CurrentValue <= 0)
+        {
+            OnDeath?.Invoke();
+            Destroy(gameObject);
+        }
     }
-
-    private void OnDestroy()
+    // Llama a este método desde donde corresponda cuando la vida cambie.
+    public void CheckDeath()
     {
-        if (Health != null)
-            Health.OnHealthChanged -= CheckDeath;
-    }
-
-    private void CheckDeath(int current, int max)
-    {
-        if (current <= 0)
+        if (Health != null && Health.CurrentValue <= 0)
         {
             OnDeath?.Invoke();
             Destroy(gameObject);

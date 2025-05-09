@@ -1,63 +1,54 @@
 using System;
-using Interfaces;
 using Base;
 using Enums;
 
 namespace Components
 {
-    public class ManaComponent : StatComponent, IResourceUser
+    public class ManaComponent : StatComponent
     {
-        public int MaxMana => MaxValue;
-        public int CurrentMana => CurrentValue;
-
         private ManaCondition _condition = ManaCondition.ByTime;
         public ManaCondition Condition
         {
             get => _condition;
             set => _condition = value;
-        }
+        }        
 
-        public event Action<int, int> OnManaChanged;
+        private float _timeSinceLastIncrement = 0f;
 
-        public ManaComponent(int maxValue = 100) : base(maxValue)
+        public override void AffectValue(int value)
         {
-            // No invocar OnManaChanged aquí, los suscriptores se agregan después de la construcción.
-            OnValueChanged += (cur, max) => OnManaChanged?.Invoke(cur, max);
-        }
-
-        public void UseResource(int amount)
-        {
-            int cost = Math.Max(0, amount);
-            SetValue(CurrentMana - cost);
+            switch (Condition)
+            {
+                case ManaCondition.None:
+                    // No se aplica ningún efecto
+                    break;
+                case ManaCondition.ByTime:
+                    // Incrementa el valor cada 2 segundos
+                    if (_timeSinceLastIncrement >= 2f)
+                    {
+                        base.AffectValue(value);
+                        _timeSinceLastIncrement = 0f;
+                    }
+                    break;
+                case ManaCondition.Instant:
+                    base.AffectValue(value);
+                    break;
+            }
         }
 
         public void RecoverResource(int amount)
         {
-            int gain = Math.Max(0, amount);
-            SetValue(CurrentMana + gain);
+            AffectValue(amount);
         }
 
-        public void SetMana(int value)
+        public void UseResource(int amount)
         {
-            SetValue(value);
+            AffectValue(-amount);
         }
 
-        public int GetCurrentResource() => CurrentMana;
-        public int GetMaxResource() => MaxMana;
-
-        public void UpdateByCondition(float deltaTime)
+        public void SetCondition(ManaCondition condition)
         {
-            switch (Condition)
-            {
-                case ManaCondition.ByTime:
-                    RecoverResource((int)(deltaTime * 1)); // Ejemplo: 1 por segundo
-                    break;
-                case ManaCondition.ByInteraction:
-                    // Aquí puedes agregar lógica específica si lo deseas,
-                    // por ejemplo, recuperación al interactuar con algo.
-                    break;
-                // No se requieren más casos, ya que solo existen ByTime y ByInteraction
-            }
+            Condition = condition;
         }
     }
 }

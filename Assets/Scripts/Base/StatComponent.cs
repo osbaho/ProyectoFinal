@@ -1,31 +1,22 @@
 using System;
+using UnityEngine;
 
 namespace Base
 {
+    [Serializable]
     public abstract class StatComponent
     {
-        protected int maxValue = 100;
-        protected int currentValue;
+        public event Action<StatComponent> OnValueChanged;
+        [SerializeField] private int maxValue = 100;
+        private int currentValue;
 
         public int MaxValue => maxValue;
-        public int CurrentValue => currentValue;
+        public int CurrentValue => currentValue; 
 
-        public event Action<int, int> OnValueChanged;
-
-        public StatComponent(int maxValue = 100)
+        public virtual void AffectValue(int value)
         {
-            this.maxValue = maxValue;
-            currentValue = maxValue;
-        }
-
-        public virtual void SetValue(int value)
-        {
-            int clamped = Math.Clamp(value, 0, maxValue);
-            if (clamped != currentValue)
-            {
-                currentValue = clamped;
-                OnValueChanged?.Invoke(currentValue, maxValue);
-            }
+            currentValue = Mathf.Clamp(currentValue + value, 0, maxValue);
+            OnValueChanged?.Invoke(this);
         }
     }
 }

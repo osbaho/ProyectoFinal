@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using Interfaces;
 using Holders;
 
 public abstract class AbilityBase
@@ -17,13 +16,7 @@ public abstract class AbilityBase
         if (Time.time < lastUseTime + Cooldown)
             return false;
 
-        // Verifica recursos si el usuario implementa IResourceUser
-        var resourceUser = user as IResourceUser;
-        if (resourceUser != null && ResourceCost > 0)
-        {
-            if (resourceUser.GetCurrentResource() < ResourceCost)
-                return false;
-        }
+        // Ya no verifica recursos por IResourceUser aquí
         return true;
     }
 
@@ -32,12 +25,7 @@ public abstract class AbilityBase
         if (!CanUse(user)) return;
         lastUseTime = Time.time;
 
-        // Consumir recursos si corresponde
-        var resourceUser = user as IResourceUser;
-        if (resourceUser != null && ResourceCost > 0)
-        {
-            resourceUser.UseResource(ResourceCost);
-        }
+        // Ya no consume recursos por IResourceUser aquí
 
         OnAbilityEffect(user); // Aquí se ejecuta el efecto concreto de la habilidad
     }

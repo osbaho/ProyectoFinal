@@ -1,7 +1,7 @@
 using UnityEngine;
 using Abilities;
-using Interfaces;
 using Holders;
+using Components;
 
 namespace Abilities.Habilities
 {
@@ -37,7 +37,7 @@ namespace Abilities.Habilities
                 foreach (var hit in hits)
                 {
                     if (hit.gameObject == user.gameObject) continue; // No dañarse a sí mismo
-                    var health = hit.GetComponent<IHealth>();
+                    var health = hit.GetComponent<HealthComponent>();
                     if (health != null)
                     {
                         health.TakeDamage(damage);

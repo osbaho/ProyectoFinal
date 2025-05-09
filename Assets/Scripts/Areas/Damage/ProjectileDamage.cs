@@ -1,10 +1,10 @@
 using UnityEngine;
-using Interfaces;
+using Components;
 
 /// <summary>
 /// ProjectileDamage
 /// Es un componente que se adjunta al prefab del proyectil.
-/// Su función es aplicar daño cuando el proyectil colisiona con un objeto que implemente IHealth.
+/// Su función es aplicar daño cuando el proyectil colisiona con un objeto que implemente HealthComponent.
 /// Se encarga de la lógica de colisión y destrucción del proyectil tras impactar.
 /// </summary>
 public class ProjectileDamage : MonoBehaviour
@@ -15,10 +15,10 @@ public class ProjectileDamage : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        var damageable = other.GetComponent<IHealth>();
-        if (damageable != null)
+        var health = other.GetComponent<HealthComponent>();
+        if (health != null)
         {
-            damageable.TakeDamage(damage);
+            health.TakeDamage(damage);
             Destroy(gameObject);
         }
     }

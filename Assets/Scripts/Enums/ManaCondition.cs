@@ -2,7 +2,8 @@ namespace Enums
 {
     public enum ManaCondition
     {
+        None,
         ByTime,
-        ByInteraction
+        Instant
     }
 }

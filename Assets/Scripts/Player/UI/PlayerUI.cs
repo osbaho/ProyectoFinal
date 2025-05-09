@@ -13,6 +13,10 @@ public class PlayerUI : MonoBehaviour
     private HealthComponent health;
     private ManaComponent mana;
 
+    public AbilityIconUI[] abilityIcons; // Asigna en el inspector, orden: Heal, Area, Projectile
+
+    private PlayableStatHolder psh;
+
     void Start()
     {
         var holderMB = playerComponent as MonoBehaviour;
@@ -23,6 +27,7 @@ public class PlayerUI : MonoBehaviour
             psh = p;
             health = psh.Health;
             mana = psh.Mana;
+            SetupAbilityIcons();
         }
         else if (playerComponent is NonPlayableStatHolder npsh)
         {
@@ -45,31 +50,60 @@ public class PlayerUI : MonoBehaviour
         {
             if (health != null)
             {
-                health.OnHealthChanged += UpdateHealthBar;
-                UpdateHealthBar(health.CurrentHealth, health.MaxHealth);
+                UpdateHealthBar(health.CurrentValue, health.MaxValue);
+                // Suscribirse a cambios de vida si existe el evento
+                health.OnValueChanged += OnHealthChanged;
             }
             if (mana != null)
             {
-                mana.OnManaChanged += UpdateResourceBar;
-                UpdateResourceBar(mana.CurrentMana, mana.MaxMana);
+                UpdateResourceBar(mana.CurrentValue, mana.MaxValue);
+                mana.OnValueChanged += OnManaChanged;
             }
+        }
+    }
+
+    private void SetupAbilityIcons()
+    {
+        if (psh == null || abilityIcons == null) return;
+        var abilities = psh.AbilitySystem.AllAbilities;
+        for (int i = 0; i < abilityIcons.Length && i < abilities.Count; i++)
+        {
+            abilityIcons[i].SetIcon(abilities[i].Icon);
+        }
+    }
+
+    public void TriggerAbilityCooldown(int index, float cooldown)
+    {
+        if (abilityIcons != null && index >= 0 && index < abilityIcons.Length)
+        {
+            abilityIcons[index].StartCooldown(cooldown);
         }
     }
 
     void OnDestroy()
     {
         if (health != null)
-            health.OnHealthChanged -= UpdateHealthBar;
+            health.OnValueChanged -= OnHealthChanged;
         if (mana != null)
-            mana.OnManaChanged -= UpdateResourceBar;
+            mana.OnValueChanged -= OnManaChanged;
     }
 
-    void UpdateHealthBar(int current, int max)
+    private void OnHealthChanged(Base.StatComponent stat)
+    {
+        UpdateHealthBar(health.CurrentValue, health.MaxValue);
+    }
+
+    private void OnManaChanged(Base.StatComponent stat)
+    {
+        UpdateResourceBar(mana.CurrentValue, mana.MaxValue);
+    }
+
+    public void UpdateHealthBar(int current, int max)
     {
         UIUtils.SetSliderValue(healthBar, current, max);
     }
 
-    void UpdateResourceBar(int current, int max)
+    public void UpdateResourceBar(int current, int max)
     {
         UIUtils.SetSliderValue(resourceBar, current, max);
     }

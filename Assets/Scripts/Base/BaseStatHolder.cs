@@ -1,36 +1,22 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Components;
 
 namespace Base
 {
     public abstract class BaseStatHolder : MonoBehaviour
     {
-        protected List<StatComponent> stats = new();
+        // Parámetros comunes para todos los holders
+        [Header("Stats")]
+        [SerializeField] protected HealthComponent health;
 
-        public virtual void Initialize(params StatComponent[] components)
-        {
-            if (components != null)
-                stats.AddRange(components);
-        }
+        // Permite acceso público de solo lectura a health
+        public HealthComponent Health => health;
 
-        public virtual void AddStat(StatComponent stat)
+        // Método común para recibir daño
+        public virtual void TakeDamage(int amount)
         {
-            if (stat != null && !stats.Contains(stat))
-                stats.Add(stat);
-        }
-
-        public virtual void RemoveStat(StatComponent stat)
-        {
-            if (stat != null)
-                stats.Remove(stat);
-        }
-
-        public virtual T GetStat<T>() where T : StatComponent
-        {
-            foreach (var stat in stats)
-                if (stat is T tStat)
-                    return tStat;
-            return null;
+            Health?.TakeDamage(amount);
         }
     }
 }

@@ -2,7 +2,6 @@
 
 ' === RELATIONSHIP LEGEND ===
 ' <|--  : Herencia (Inheritance)
-' ..|>  : Implementa interfaz (Implements interface)
 ' --    : Asociación (Association)
 ' *--   : Composición (Composition)
 ' ..>   : Asociación débil (Weak association / usage)
@@ -13,23 +12,9 @@
 ' ENUMS
 package "Enums" {
     enum ManaCondition {
+        None
         ByTime
-        ByInteraction
-    }
-}
-
-' INTERFACES
-package "Interfaces" {
-    interface IHealth {
-        +TakeDamage(amount : int) : void
-        +Heal(amount : int) : void
-    }
-
-    interface IResourceUser {
-        +UseResource(amount : int) : void
-        +RecoverResource(amount : int) : void
-        +GetCurrentResource() : int
-        +GetMaxResource() : int
+        Instant
     }
 }
 
@@ -40,86 +25,75 @@ package "Base" {
         -currentValue : int
         +MaxValue : int
         +CurrentValue : int
-        +OnValueChanged : Action<int, int>
         +SetValue(value : int) : void
+        +AffectValue(value : int) : void
     }
 
     abstract class BaseStatHolder {
-        +Initialize(components : StatComponent[]) : void
-        +AddStat(stat : StatComponent) : void
-        +RemoveStat(stat : StatComponent) : void
-        +GetStat<T>() : T
-    }
-
-    abstract class ResourceUserAgent {
-        +UseResource(amount : int) : void
-        +RecoverResource(amount : int) : void
-        +GetCurrentResource() : int
-        +GetMaxResource() : int
-        #CurrentResource : int
-        #MaxResource : int
-        #ConsumeResource(amount : int) : void
-        #Recover(amount : int) : void
+        [protected] health : HealthComponent
+        +Health : HealthComponent
+        +TakeDamage(amount : int) : void
     }
 }
 
 package "Components" {
     class HealthComponent {
-        +MaxHealth : int
         +CurrentHealth : int
-        +OnHealthChanged : Action<int, int>
-        +TakeDamage(amount : int) : void
+        +MaxHealth : int
         +Heal(amount : int) : void
+        +TakeDamage(amount : int) : void
         +SetHealth(value : int) : void
+        +CurrentValue : int
+        +MaxValue : int
     }
 
     class ManaComponent {
-        +MaxMana : int
         +CurrentMana : int
+        +MaxMana : int
         +Condition : ManaCondition
-        +OnManaChanged : Action<int, int>
         +UseResource(amount : int) : void
         +RecoverResource(amount : int) : void
         +SetMana(value : int) : void
-        +GetCurrentResource() : int
-        +GetMaxResource() : int
-        +UpdateByCondition(deltaTime : float) : void
+        +AffectValue(value : int) : void
+        +CurrentValue : int
+        +MaxValue : int
     }
 }
 
 package "Player.Holders" {
     class PlayableStatHolder {
-        +Health : HealthComponent
+        -mana : ManaComponent
         +Mana : ManaComponent
         +AbilitySystem : SystemAbility
         +AddAbility(ability : AbilityBase) : void
         +RemoveAbility(ability : AbilityBase) : void
         +UseAbility(index : int) : void
-        +TakeDamage(amount : int) : void
         +InitializeAbilities(healIcon, areaIcon, projectileIcon, projectilePrefab) : void
+        +Initialize(health : HealthComponent, mana : ManaComponent) : void
+        +TakeDamage(amount : int) : void
     }
 }
 
 package "Agentes.NPC" {
     class NonPlayableStatHolder {
-        +Health : HealthComponent
         +OnDeath : Action
+        +CheckDeath() : void
     }
 }
 
 package "Agentes" {
     class SoulMage {
-        #CurrentResource : int
-        #MaxResource : int
-        #ConsumeResource(amount : int) : void
-        #Recover(amount : int) : void
+        +UseHealth(amount : int) : void
+        +RecoverHealth(amount : int) : void
+        +GetCurrentHealth() : int
+        +GetMaxHealth() : int
     }
 
     class ManaKnight {
-        #CurrentResource : int
-        #MaxResource : int
-        #ConsumeResource(amount : int) : void
-        #Recover(amount : int) : void
+        +ManaComponent : ManaComponent
+        +UseMana(amount : int) : void
+        +GetCurrentMana() : int
+        +GetMaxMana() : int
     }
 }
 
@@ -168,9 +142,19 @@ package "Abilities.System" {
 }
 
 package "Areas.Recovery" {
-    class ResourceArea {
-        +resourceAmount : int
+    class HealthArea {
+        +healthAmount : int
+        +interval : float
         +OnTriggerEnter(other : Collider) : void
+        +OnTriggerExit(other : Collider) : void
+        +Update() : void
+    }
+    class ManaArea {
+        +manaAmount : int
+        +interval : float
+        +OnTriggerEnter(other : Collider) : void
+        +OnTriggerExit(other : Collider) : void
+        +Update() : void
     }
 }
 
@@ -198,30 +182,25 @@ Base.StatComponent <|-- Components.HealthComponent : "Herencia"
 Base.StatComponent <|-- Components.ManaComponent : "Herencia"
 Base.BaseStatHolder <|-- Player.Holders.PlayableStatHolder : "Herencia"
 Base.BaseStatHolder <|-- Agentes.NPC.NonPlayableStatHolder : "Herencia"
-Base.ResourceUserAgent <|-- Agentes.SoulMage : "Herencia"
-Base.ResourceUserAgent <|-- Agentes.ManaKnight : "Herencia"
+Player.Holders.PlayableStatHolder <|-- Agentes.SoulMage : "Herencia"
+Player.Holders.PlayableStatHolder <|-- Agentes.ManaKnight : "Herencia"
 Abilities.Base.AbilityBase <|-- Abilities.Habilities.HealAbility : "Herencia"
 Abilities.Base.AbilityBase <|-- Abilities.Habilities.AreaDamageAbility : "Herencia"
 Abilities.Base.AbilityBase <|-- Abilities.Habilities.ProjectileAbility : "Herencia"
 
-' Implementación de interfaz
-Components.HealthComponent ..|> Interfaces.IHealth : "Implementa"
-Components.ManaComponent ..|> Interfaces.IResourceUser : "Implementa"
-Base.ResourceUserAgent ..|> Interfaces.IResourceUser : "Implementa"
-
 ' Asociación
-Player.Holders.PlayableStatHolder -- Abilities.System.SystemAbility : "AbilitySystem"
-Player.Holders.PlayableStatHolder -- Components.HealthComponent : "Health"
-Player.Holders.PlayableStatHolder -- Components.ManaComponent : "Mana"
-Agentes.NPC.NonPlayableStatHolder -- Components.HealthComponent : "Health"
-Components.ManaComponent -- Enums.ManaCondition : "Condition"
+Base.BaseStatHolder -- Components.HealthComponent : "Asociación health"
+Player.Holders.PlayableStatHolder -- Components.ManaComponent : "Asociación mana"
+Player.Holders.PlayableStatHolder -- Abilities.System.SystemAbility : "Asociación AbilitySystem"
+Components.ManaComponent -- Enums.ManaCondition : "Asociación Condition"
 
-' Composición: SystemAbility contiene de 1 a 3 habilidades
-Abilities.System.SystemAbility "1" *-- "1..3" Abilities.Base.AbilityBase : "AllAbilities"
+' Composición: SystemAbility contiene de 1 a n habilidades
+Abilities.System.SystemAbility "1" *-- "*" Abilities.Base.AbilityBase : "AllAbilities"
 
 ' Asociación débil / uso
-Areas.Recovery.ResourceArea ..> Interfaces.IResourceUser : "OnTriggerEnter"
-Areas.Damage.ProjectileDamage ..> Interfaces.IHealth : "OnTriggerEnter"
-Areas.Damage.AreaDamage ..> Interfaces.IHealth : "OnTriggerEnter/Exit/Update"
+Areas.Recovery.HealthArea ..> Components.HealthComponent : "uso OnTriggerEnter/Exit/Update"
+Areas.Recovery.ManaArea ..> Components.ManaComponent : "uso OnTriggerEnter/Exit/Update"
+Areas.Damage.ProjectileDamage ..> Components.HealthComponent : "uso OnTriggerEnter"
+Areas.Damage.AreaDamage ..> Components.HealthComponent : "uso OnTriggerEnter/Exit/Update"
 
 @enduml

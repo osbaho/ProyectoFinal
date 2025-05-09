@@ -20,6 +20,7 @@ public class FPSController : MonoBehaviour, IMovable
     private Camera mainCamera;
     private PlayerInputHandler inputHandler;
     private PlayableStatHolder playerStats;
+    private PlayerAbilityController abilityController;
     private Vector3 currentMovement = Vector3.zero;
     private float verticalRotation;
 
@@ -29,6 +30,7 @@ public class FPSController : MonoBehaviour, IMovable
         mainCamera = Camera.main;
         inputHandler = PlayerInputHandler.Instance;
         playerStats = GetComponent<PlayableStatHolder>();
+        abilityController = GetComponent<PlayerAbilityController>(); // Puede ser null si no está en el mismo GameObject
     }
 
     private void Update()

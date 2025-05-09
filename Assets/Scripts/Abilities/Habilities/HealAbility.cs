@@ -3,6 +3,7 @@ using Abilities;
 using System;
 using System.Collections.Generic;
 using Holders;
+using Components;
 
 namespace Abilities.Habilities
 {
@@ -17,24 +18,23 @@ namespace Abilities.Habilities
 
         public override bool CanUse(PlayableStatHolder user)
         {
-            // Puede usarse si el usuario tiene componente de salud y no está ya al máximo y tiene recursos suficientes
-            if (user == null || user.Health == null || user.Health.CurrentHealth >= user.Health.MaxHealth)
+            var health = user.GetComponent<HealthComponent>();
+            if (user == null || health == null || health.CurrentValue >= health.MaxValue)
                 return false;
             return base.CanUse(user);
         }
 
-        // No es necesario consumir recursos aquí, ya lo hace AbilityBase.Use
         protected override void OnAbilityEffect(PlayableStatHolder user)
         {
-            var health = user.Health;
+            var health = user.GetComponent<HealthComponent>();
             if (health == null) return;
 
-            int max = health.MaxHealth;
-            int current = health.CurrentHealth;
+            int max = health.MaxValue;
+            int current = health.CurrentValue;
 
             if (current >= 0.9f * max)
             {
-                health.SetHealth(max);
+                health.Heal(max - current);
             }
             else
             {
