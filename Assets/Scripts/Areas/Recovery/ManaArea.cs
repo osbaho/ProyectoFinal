@@ -13,7 +13,8 @@ public class ManaArea : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        var mana = other.GetComponentInChildren<ManaComponent>();
+        var statHolder = other.GetComponent<PlayableStatHolder>();
+        var mana = statHolder != null ? statHolder.Mana : null;
         if (mana != null && !manaCoroutines.ContainsKey(mana))
         {
             Coroutine coroutine = StartCoroutine(ManaCoroutine(mana));
@@ -23,7 +24,8 @@ public class ManaArea : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        var mana = other.GetComponent<PlayableStatHolder>().Mana;
+        var statHolder = other.GetComponent<PlayableStatHolder>();
+        var mana = statHolder != null ? statHolder.Mana : null;
         if (mana != null && manaCoroutines.TryGetValue(mana, out Coroutine coroutine))
         {
             StopCoroutine(coroutine);

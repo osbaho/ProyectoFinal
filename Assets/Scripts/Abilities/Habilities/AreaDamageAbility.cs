@@ -34,11 +34,21 @@ namespace Abilities.Habilities
 
         protected override void OnAbilityEffect(PlayableStatHolder user)
         {
-            // Consumir maná antes de ejecutar la habilidad
-            if (user.Mana != null && user.Mana.CurrentValue >= ResourceCost)
+            // Si el usuario es SoulMage, consume vida; si es ManaKnight u otro, consume maná
+            if (user is SoulMage soulMage)
+            {
+                if (soulMage.Health == null || soulMage.Health.CurrentValue < ResourceCost)
+                    return;
+                soulMage.UseHealth(ResourceCost);
+            }
+            else if (user.Mana != null && user.Mana.CurrentValue >= ResourceCost)
+            {
                 user.Mana.AffectValue(-ResourceCost, Enums.ManaCondition.Instant);
+            }
             else
-                return; // No hay suficiente maná, no ejecutar la habilidad
+            {
+                return; // No hay suficiente recurso
+            }
 
             if (Random.value <= _explosionChance)
             {

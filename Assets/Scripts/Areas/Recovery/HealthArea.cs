@@ -11,7 +11,13 @@ public class HealthArea : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         Debug.Log($"HealthArea: OnTriggerEnter con {other.gameObject.name}");
-        var health = other.GetComponent<BaseStatHolder>().Health;
+        var statHolder = other.GetComponent<BaseStatHolder>();
+        if (statHolder == null)
+        {
+            Debug.LogWarning($"HealthArea: {other.gameObject.name} no tiene BaseStatHolder.");
+            return;
+        }
+        var health = statHolder.Health;
         if (health != null)
         {
             health.AffectValue(healAmount);

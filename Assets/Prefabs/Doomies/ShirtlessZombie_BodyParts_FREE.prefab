@@ -1842,6 +1842,7 @@ GameObject:
   - component: {fileID: 3603625406075556587}
   - component: {fileID: 7269525453101664401}
   - component: {fileID: 3857367490879927554}
+  - component: {fileID: 2988981524421578538}
   m_Layer: 0
   m_Name: ShirtlessZombie_BodyParts_FREE
   m_TagString: Untagged
@@ -1902,7 +1903,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BodyMaterials:
   - {fileID: 2100000, guid: 4cde5aac7288f054380fe768f78a0311, type: 2}
-  eyesGlow: 0
+  eyesGlow: 1
+--- !u!114 &2988981524421578538
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4127960938634840145}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da2b48ef7fdfea8468f979562df8b994, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  health:
+    maxValue: 100
+    currentValue: 0
 --- !u!1 &4466354536818247646
 GameObject:
   m_ObjectHideFlags: 0
