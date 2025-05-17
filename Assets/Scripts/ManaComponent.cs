@@ -17,7 +17,7 @@ public class ManaComponent : StatComponent, IResourceUser
 
     public ManaComponent(int maxValue = 100) : base(maxValue)
     {
-        OnManaChanged?.Invoke(CurrentMana, MaxMana);
+        // No invocar OnManaChanged aquí, los suscriptores se agregan después de la construcción.
         OnValueChanged += (cur, max) => OnManaChanged?.Invoke(cur, max);
     }
 

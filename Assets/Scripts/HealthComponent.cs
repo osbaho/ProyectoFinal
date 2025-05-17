@@ -10,7 +10,7 @@ public class HealthComponent : StatComponent, IHealth
 
     public HealthComponent(int maxValue = 100) : base(maxValue > 0 ? maxValue : 1)
     {
-        OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
+        // No invocar OnHealthChanged aquí, los suscriptores se agregan después de la construcción.
         OnValueChanged += (cur, max) => OnHealthChanged?.Invoke(cur, max);
     }
 

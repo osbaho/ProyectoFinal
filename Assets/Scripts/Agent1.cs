@@ -4,14 +4,28 @@ using Interfaces;
 /// <summary>
 /// SoulMage: Portador jugable cuyas habilidades consumen vida.
 /// </summary>
-public class SoulMage : PlayableStatHolder
+[RequireComponent(typeof(PlayableStatHolder))]
+public class SoulMage : MonoBehaviour, IResourceUser
 {
-    protected ResourceType resourceType = ResourceType.Health;
+    private PlayableStatHolder holder => GetComponent<PlayableStatHolder>();
 
-    public SoulMage(HealthComponent health, ManaComponent mana = null)
-        : base(null, health, mana)
+    public void UseResource(int amount)
     {
-        resourceType = ResourceType.Health;
-        // Lógica adicional para SoulMage si es necesario
+        holder.Health?.TakeDamage(amount);
+    }
+
+    public void RecoverResource(int amount)
+    {
+        holder.Health?.Heal(amount);
+    }
+
+    public int GetCurrentResource()
+    {
+        return holder.Health != null ? holder.Health.CurrentHealth : 0;
+    }
+
+    public int GetMaxResource()
+    {
+        return holder.Health != null ? holder.Health.MaxHealth : 0;
     }
 }

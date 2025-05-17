@@ -1,28 +1,44 @@
 using UnityEngine;
 using UnityEngine.UI;
-using Interfaces;
 
 public class PlayerUI : MonoBehaviour
 {
     public Slider healthBar;
     public Slider resourceBar;
-    public Image[] abilityIcons;
-    public Text[] abilityNames;
 
-    public IAbilityUser playerComponent;
-    private IAbilityUser statHolder;
+    public MonoBehaviour playerComponent;
     private HealthComponent health;
     private ManaComponent mana;
 
     void Start()
     {
-        statHolder = playerComponent;
+        var holderMB = playerComponent as MonoBehaviour;
+        PlayableStatHolder psh = null;
 
-        // Acceso a Health y Mana por el sistema de componentes
-        health = (statHolder as PlayableStatHolder)?.GetStat<HealthComponent>();
-        mana = (statHolder as PlayableStatHolder)?.GetStat<ManaComponent>();
+        if (playerComponent is PlayableStatHolder p)
+        {
+            psh = p;
+            health = psh.Health;
+            mana = psh.Mana;
+        }
+        else if (playerComponent is NonPlayableStatHolder npsh)
+        {
+            health = npsh.Health;
+            mana = null;
+        }
+        else if (holderMB != null)
+        {
+            health = holderMB.GetComponent<HealthComponent>();
+            mana = holderMB.GetComponent<ManaComponent>();
+        }
+        else
+        {
+            Debug.LogError("PlayerUI: playerComponent no es un tipo válido.");
+            health = null;
+            mana = null;
+        }
 
-        if (statHolder != null)
+        if (playerComponent != null)
         {
             if (health != null)
             {
@@ -34,13 +50,6 @@ public class PlayerUI : MonoBehaviour
                 mana.OnManaChanged += UpdateResourceBar;
                 UpdateResourceBar(mana.CurrentMana, mana.MaxMana);
             }
-            UpdateAbilities();
-        }
-
-        if (statHolder is PlayableStatHolder psh)
-        {
-            psh.OnAbilityAdded += _ => UpdateAbilities();
-            psh.OnAbilityRemoved += _ => UpdateAbilities();
         }
     }
 
@@ -50,12 +59,6 @@ public class PlayerUI : MonoBehaviour
             health.OnHealthChanged -= UpdateHealthBar;
         if (mana != null)
             mana.OnManaChanged -= UpdateResourceBar;
-
-        if (statHolder is PlayableStatHolder psh)
-        {
-            psh.OnAbilityAdded -= _ => UpdateAbilities();
-            psh.OnAbilityRemoved -= _ => UpdateAbilities();
-        }
     }
 
     void UpdateHealthBar(int current, int max)
@@ -66,26 +69,5 @@ public class PlayerUI : MonoBehaviour
     void UpdateResourceBar(int current, int max)
     {
         UIUtils.SetSliderValue(resourceBar, current, max);
-    }
-
-    void UpdateAbilities()
-    {
-        if (statHolder == null) return;
-        var abilities = statHolder.Abilities;
-        if (abilities != null && abilityIcons != null && abilityNames != null)
-        {
-            int count = Mathf.Min(abilities.Count, abilityIcons.Length, abilityNames.Length);
-            for (int i = 0; i < count; i++)
-            {
-                var ability = abilities[i];
-                if (ability != null)
-                {
-                    if (abilityIcons[i] != null)
-                        abilityIcons[i].sprite = ability.Icon;
-                    if (abilityNames[i] != null)
-                        abilityNames[i].text = ability.Name;
-                }
-            }
-        }
     }
 }

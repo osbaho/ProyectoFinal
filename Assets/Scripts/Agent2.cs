@@ -4,14 +4,28 @@ using Interfaces;
 /// <summary>
 /// ManaKnight: Portador jugable cuyas habilidades consumen maná.
 /// </summary>
-public class ManaKnight : PlayableStatHolder
+[RequireComponent(typeof(PlayableStatHolder))]
+public class ManaKnight : MonoBehaviour, IResourceUser
 {
-    protected ResourceType resourceType = ResourceType.Mana;
+    private PlayableStatHolder holder => GetComponent<PlayableStatHolder>();
 
-    public ManaKnight(HealthComponent health = null, ManaComponent mana = null)
-        : base(null, health, mana)
+    public void UseResource(int amount)
     {
-        resourceType = ResourceType.Mana;
-        // Add any additional logic here if needed
+        holder.Mana?.UseResource(amount);
+    }
+
+    public void RecoverResource(int amount)
+    {
+        holder.Mana?.RecoverResource(amount);
+    }
+
+    public int GetCurrentResource()
+    {
+        return holder.Mana != null ? holder.Mana.CurrentMana : 0;
+    }
+
+    public int GetMaxResource()
+    {
+        return holder.Mana != null ? holder.Mana.MaxMana : 0;
     }
 }

@@ -6,5 +6,6 @@ namespace Interfaces
         void RecoverResource(int amount);
         int GetCurrentResource();
         int GetMaxResource();
+        // event System.Action<int, int> OnResourceChanged; // Opcional para notificaciones
     }
 }

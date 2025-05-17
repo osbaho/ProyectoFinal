@@ -1,55 +1,42 @@
 using System.Collections.Generic;
-using Interfaces;
+using UnityEngine;
 
 /// <summary>
 /// Portador jugable: puede tener habilidades, vida y/o maná por asociación.
 /// </summary>
-public class PlayableStatHolder : StatHolder, IAbilityUser
+public class PlayableStatHolder : BaseStatHolder
 {
-    private readonly List<IAbility> abilities = new();
-    public IReadOnlyList<IAbility> Abilities => abilities.AsReadOnly();
+    [Header("Stats")]
+    public HealthComponent Health;
+    public ManaComponent Mana;
 
-    public event System.Action<IAbility> OnAbilityAdded;
-    public event System.Action<IAbility> OnAbilityRemoved;
+    [Header("Abilities")]
+    public SystemAbility AbilitySystem = new SystemAbility();
 
-    public PlayableStatHolder(IEnumerable<IAbility> initialAbilities = null, params StatComponent[] components)
-        : base(components)
+    public void Initialize(HealthComponent health = null, ManaComponent mana = null)
     {
-        if (initialAbilities != null)
-            abilities.AddRange(initialAbilities);
+        Health = health;
+        Mana = mana;
     }
 
-    public void AddAbility(IAbility ability)
+    public void AddAbility(AbilityBase ability)
     {
-        if (ability != null && !abilities.Contains(ability))
-        {
-            abilities.Add(ability);
-            OnAbilityAdded?.Invoke(ability);
-        }
+        AbilitySystem.AddAbility(ability);
     }
 
-    public void RemoveAbility(IAbility ability)
+    public void RemoveAbility(AbilityBase ability)
     {
-        if (ability != null && abilities.Remove(ability))
-        {
-            OnAbilityRemoved?.Invoke(ability);
-        }
-    }
-
-    public void ClearAbilities()
-    {
-        abilities.Clear();
+        AbilitySystem.RemoveAbility(ability);
     }
 
     public void UseAbility(int index)
     {
-        if (index >= 0 && index < abilities.Count)
-            abilities[index].Use(this);
+        AbilitySystem.SelectedAbilityIndex = index;
+        AbilitySystem.UseSelectedAbility(this);
     }
 
     public void TakeDamage(int amount)
     {
-        var health = GetStat<HealthComponent>();
-        health?.TakeDamage(amount);
+        Health?.TakeDamage(amount);
     }
 }
