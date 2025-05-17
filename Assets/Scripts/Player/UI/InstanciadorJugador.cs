@@ -42,17 +42,37 @@ public class InstanciadorJugador : MonoBehaviour
             var playerUI = Object.FindFirstObjectByType<PlayerUI>();
             if (playerUI != null)
             {
-                // Busca el statHolder en hijos también
-                var statHolder = playerInstance.GetComponentInChildren<PlayableStatHolder>();
-                if (statHolder != null)
+                // Busca ManaKnight en hijos (más específico que PlayableStatHolder)
+                var manaKnight = playerInstance.GetComponentInChildren<ManaKnight>();
+                if (manaKnight != null)
                 {
-                    statHolder.InitializeAbilities(healIcon, areaIcon, projectileIcon);
-                    Debug.Log($"InstanciadorJugador: Asignando statHolder a PlayerUI ({statHolder.gameObject.name})");
-                    playerUI.SetStatHolder(statHolder);
+                    // Crea instancias de datos y llama a Awake para inicializar valores
+                    var manaComponent = new Components.ManaComponent();
+                    manaComponent.Awake();
+                    var healthComponent = new Components.HealthComponent();
+                    healthComponent.Awake();
+                    // Asigna prefabs si los tienes (puedes usar los mismos que en el inspector)
+                    var explosionVFX = manaKnight.GetType().GetField("explosionVFXPrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(manaKnight) as GameObject;
+                    var projectilePrefab = manaKnight.GetType().GetField("projectilePrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(manaKnight) as GameObject;
+                    manaKnight.RobustInitialize(manaComponent, healthComponent, explosionVFX, projectilePrefab);
+                    manaKnight.InitializeAbilities(healIcon, areaIcon, projectileIcon);
+                    Debug.Log($"InstanciadorJugador: Asignando manaKnight a PlayerUI ({manaKnight.gameObject.name})");
+                    playerUI.SetStatHolder(manaKnight);
                 }
                 else
                 {
-                    Debug.LogWarning("InstanciadorJugador: No se encontró un componente de tipo PlayableStatHolder en el jugador instanciado.");
+                    // Fallback: busca PlayableStatHolder genérico
+                    var statHolder = playerInstance.GetComponentInChildren<PlayableStatHolder>();
+                    if (statHolder != null)
+                    {
+                        statHolder.InitializeAbilities(healIcon, areaIcon, projectileIcon);
+                        Debug.Log($"InstanciadorJugador: Asignando statHolder a PlayerUI ({statHolder.gameObject.name})");
+                        playerUI.SetStatHolder(statHolder);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("InstanciadorJugador: No se encontró un componente de tipo PlayableStatHolder en el jugador instanciado.");
+                    }
                 }
             }
             else

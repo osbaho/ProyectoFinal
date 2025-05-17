@@ -9,16 +9,13 @@ namespace Components
     [Serializable]
     public class ManaComponent : StatComponent
     {
+        // Reflection solo debe usarse para inicialización avanzada/documentada
         private ManaCondition _condition = ManaCondition.ByTime;
-        public ManaCondition Condition
-        {
-            get => _condition;
-            private set => _condition = value;
-        }
+        public ManaCondition Condition { get; private set; }
 
         public void SetCondition(ManaCondition condition)
         {
-            _condition = condition;
+            Condition = condition;
         }
 
         private uint flowSpeed = 1;

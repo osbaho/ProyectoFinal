@@ -11,7 +11,7 @@ namespace Holders
     /// </summary>
     public class PlayableStatHolder : BaseStatHolder
     {
-        [SerializeField] private ManaComponent mana;
+        [SerializeReference] private readonly ManaComponent mana;
         [SerializeField] private GameObject explosionVFXPrefab;
         [SerializeField] private GameObject projectilePrefab;
 
@@ -19,20 +19,12 @@ namespace Holders
         private readonly SystemAbility abilitySystem = new SystemAbility();
 
         public SystemAbility AbilitySystem => abilitySystem;
-        public ManaComponent Mana
-        {
-            get
-            {
-                if (mana == null)
-                    mana = GetComponentInChildren<ManaComponent>();
-                return mana;
-            }
-        }
+        public ManaComponent Mana { get; private set; }
 
         public void Initialize(HealthComponent health = null, ManaComponent mana = null)
         {
             SetHealth(health);
-            this.mana = mana;
+            this.Mana = mana;
         }
 
         protected void SetHealth(HealthComponent health)

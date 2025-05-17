@@ -221,7 +221,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7058772850685403564, guid: cf75d384243ef244db1bb9f3b1d4a338, type: 3}
       propertyPath: m_Name
-      value: UI
+      value: '***UI***'
       objectReference: {fileID: 0}
     - target: {fileID: 8445568765495752138, guid: cf75d384243ef244db1bb9f3b1d4a338, type: 3}
       propertyPath: m_Color.a
@@ -236,6 +236,25 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cf75d384243ef244db1bb9f3b1d4a338, type: 3}
+--- !u!1 &590487506 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7118682089249250964, guid: 1cfac436c7cdf5f48ae010f36419351a, type: 3}
+  m_PrefabInstance: {fileID: 907372970}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &590487508
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 590487506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea3cf6374e963c045991fc132c75dfe7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  healAmount: 10
+  healInterval: 1
 --- !u!4 &591265473 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2144262203401906598, guid: 1cfac436c7cdf5f48ae010f36419351a, type: 3}
@@ -357,11 +376,20 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: -16.746
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8428737297732066471, guid: 1cfac436c7cdf5f48ae010f36419351a, type: 3}
+    - {fileID: 1477963666741062073, guid: 1cfac436c7cdf5f48ae010f36419351a, type: 3}
+    - {fileID: 8481026540401600120, guid: 1cfac436c7cdf5f48ae010f36419351a, type: 3}
     m_RemovedGameObjects:
     - {fileID: 6471392829580455734, guid: 1cfac436c7cdf5f48ae010f36419351a, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7118682089249250964, guid: 1cfac436c7cdf5f48ae010f36419351a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 590487508}
+    - targetCorrespondingSourceObject: {fileID: 8089264090152517274, guid: 1cfac436c7cdf5f48ae010f36419351a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2136547537}
   m_SourcePrefab: {fileID: 100100000, guid: 1cfac436c7cdf5f48ae010f36419351a, type: 3}
 --- !u!1 &917743079
 GameObject:
@@ -546,9 +574,9 @@ MonoBehaviour:
   jugadorPrefabs:
   - {fileID: 8119254457498696155, guid: 2b1fcd9c63d72444bbb434a849be82b6, type: 3}
   - {fileID: 8119254457498696155, guid: cfcc57549b5c4204c82ce6d5069998c4, type: 3}
-  healIcon: {fileID: 0}
-  areaIcon: {fileID: 0}
-  projectileIcon: {fileID: 0}
+  healIcon: {fileID: 21300000, guid: b1501f18759529c46b4670a1f62ae6c0, type: 3}
+  areaIcon: {fileID: 21300000, guid: 04c7fad5537dd76469becb3a8239fdc2, type: 3}
+  projectileIcon: {fileID: 21300000, guid: 59106fe6f0074c44082d9cd00af5adf0, type: 3}
 --- !u!1 &1861159054
 GameObject:
   m_ObjectHideFlags: 0
@@ -634,6 +662,25 @@ MonoBehaviour:
   habilidad1: Habilidad1
   habilidad2: Habilidad2
   habilidad3: Habilidad3
+--- !u!1 &2136547535 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8089264090152517274, guid: 1cfac436c7cdf5f48ae010f36419351a, type: 3}
+  m_PrefabInstance: {fileID: 907372970}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2136547537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2136547535}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4141737cd0f959747b2399bc01ebef72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  manaAmount: 20
+  interval: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

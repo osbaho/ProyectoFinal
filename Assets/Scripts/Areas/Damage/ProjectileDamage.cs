@@ -1,5 +1,6 @@
 using UnityEngine;
 using Components;
+using Base;
 
 /// <summary>
 /// ProjectileDamage
@@ -28,7 +29,8 @@ public class ProjectileDamage : MonoBehaviour
         if (owner != null && other.gameObject == owner)
             return;
 
-        var health = other.GetComponent<HealthComponent>();
+        var statHolder = other.GetComponent<BaseStatHolder>();
+        var health = statHolder != null ? statHolder.Health : null;
         if (health != null && damage > 0)
         {
             health.AffectValue(-damage);

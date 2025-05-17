@@ -1,206 +1,206 @@
 @startuml
+' =========================
+' PAQUETES/NAMESPACES
+' =========================
 
-' === RELATIONSHIP LEGEND ===
-' <|--  : Herencia (Inheritance)
-' --    : Asociación (Association)
-' *--   : Composición (Composition)
-' ..>   : Asociación débil (Weak association / usage)
-' "1"   : Uno
-' "0..*" o "*" : Muchos
-' "1..3": Entre uno y tres
-
-' ENUMS
-package "Enums" {
-    enum ManaCondition {
-        None
-        ByTime
-        Instant
+package "Core.Stats" {
+    class BaseStatHolder {
+        - healthComponent : HealthComponent
+        - manaComponent : ManaComponent
+        + GetHealthComponent() : HealthComponent
+        + GetManaComponent() : ManaComponent
+        ' Clase base para portadores de estadísticas (vida/maná)
     }
 }
 
-' BASE COMPONENTS
-package "Base" {
-    abstract class StatComponent {
-        -maxValue : int
-        -currentValue : int
-        +MaxValue : int
-        +CurrentValue : int
-        +SetValue(value : int) : void
-        +AffectValue(value : int) : void
-    }
-
-    abstract class BaseStatHolder {
-        [protected] health : HealthComponent
-        +Health : HealthComponent
-        +TakeDamage(amount : int) : void
-    }
-}
-
-package "Components" {
-    class HealthComponent {
-        +CurrentHealth : int
-        +MaxHealth : int
-        +Heal(amount : int) : void
-        +TakeDamage(amount : int) : void
-        +SetHealth(value : int) : void
-        +CurrentValue : int
-        +MaxValue : int
-    }
-
-    class ManaComponent {
-        +CurrentMana : int
-        +MaxMana : int
-        +Condition : ManaCondition
-        +UseResource(amount : int) : void
-        +RecoverResource(amount : int) : void
-        +SetMana(value : int) : void
-        +AffectValue(value : int) : void
-        +CurrentValue : int
-        +MaxValue : int
-    }
-}
-
-package "Player.Holders" {
+package "Core.Player" {
     class PlayableStatHolder {
-        -mana : ManaComponent
-        +Mana : ManaComponent
-        +AbilitySystem : SystemAbility
-        +AddAbility(ability : AbilityBase) : void
-        +RemoveAbility(ability : AbilityBase) : void
-        +UseAbility(index : int) : void
-        +InitializeAbilities(healIcon, areaIcon, projectileIcon, projectilePrefab) : void
-        +Initialize(health : HealthComponent, mana : ManaComponent) : void
-        +TakeDamage(amount : int) : void
+        - abilities : List<AbilityBase> <<list>>
+        # AbilitySystem : SystemAbility
+        + UseAbility(index: int) : void
+        + RobustInitialize() : void
+        + Health { get }
+        + Mana { get }
+        ' Hereda de BaseStatHolder. Portador jugable con habilidades.
     }
-}
-
-package "Agentes.NPC" {
     class NonPlayableStatHolder {
-        +OnDeath : Action
-        +CheckDeath() : void
+        + OnDeath : Action <<event>>
+        + CheckDeath() : void
+        + Health { get }
+        ' Hereda de BaseStatHolder. Portador no jugable.
     }
 }
 
-package "Agentes" {
-    class SoulMage {
-        +UseHealth(amount : int) : void
-        +RecoverHealth(amount : int) : void
-        +GetCurrentHealth() : int
-        +GetMaxHealth() : int
-    }
-
+package "Core.Agents" {
     class ManaKnight {
-        +ManaComponent : ManaComponent
-        +UseMana(amount : int) : void
-        +GetCurrentMana() : int
-        +GetMaxMana() : int
+        - statHolder : PlayableStatHolder
+        + UseMana(amount: int) : void
+        + GetCurrentMana() : int
+        + GetMaxMana() : int
+        + Mana { get }
+        ' Portador que consume maná para habilidades.
+    }
+    class SoulMage {
+        - statHolder : PlayableStatHolder
+        + UseHealth(amount: int) : void
+        + RecoverHealth(amount: int) : void
+        + GetCurrentHealth() : int
+        + GetMaxHealth() : int
+        + Health { get }
+        ' Portador que consume vida para habilidades.
     }
 }
 
-package "Abilities.Base" {
-    abstract class AbilityBase {
-        +Name : string
-        +Icon : Sprite
-        +Cooldown : float
-        +ResourceCost : int
-        +CanUse(user : PlayableStatHolder) : bool
-        +Use(user : PlayableStatHolder) : void
-        +OnAbilityEffect(user : PlayableStatHolder) : void
+package "Core.Components" {
+    class HealthComponent {
+        - value : int
+        - maxValue : int
+        + AffectValue(amount: int) : void
+        + OnValueChanged : event <<event>>
+        + GetValue() : int
+        + GetMaxValue() : int
+        + CurrentValue { get }
+        + MaxValue { get }
+        {static} + GLOBAL_MAX : int
+        ' Componente serializable para vida.
+    }
+    class ManaComponent {
+        - value : int
+        - maxValue : int
+        - flowSpeed : uint
+        - condition : ManaCondition
+        + AffectValue(amount: int, condition: ManaCondition) : void
+        + OnValueChanged : event <<event>>
+        + GetValue() : int
+        + GetMaxValue() : int
+        + GetCondition() : ManaCondition
+        + CurrentValue { get }
+        + MaxValue { get }
+        + Condition { get }
+        {static} + GLOBAL_MAX : int
+        ' Componente serializable para maná.
     }
 }
 
-package "Abilities.Habilities" {
-    class HealAbility {
-        +HealAbility(name : string, icon : Sprite, resourceCost : int = 0)
-        +CanUse(user : PlayableStatHolder) : bool
-        +OnAbilityEffect(user : PlayableStatHolder) : void
-    }
-
-    class AreaDamageAbility {
-        +AreaDamageAbility(name : string, icon : Sprite, radius : float = 5f, damage : int = 30, resourceCost : int = 0)
-        +CanUse(user : PlayableStatHolder) : bool
-        +OnAbilityEffect(user : PlayableStatHolder) : void
-    }
-
-    class ProjectileAbility {
-        +ProjectileAbility(name : string, icon : Sprite, projectilePrefab : GameObject = null, projectileSpeed : float = 20f, resourceCost : int = 0)
-        +CanUse(user : PlayableStatHolder) : bool
-        +OnAbilityEffect(user : PlayableStatHolder) : void
-    }
+enum ManaCondition {
+    None
+    ByTime
+    Instant
 }
 
-package "Abilities.System" {
+' =========================
+' INTERFACES Y HABILIDADES
+' =========================
+
+interface IAbility {
+    + Use(holder: BaseStatHolder) : void
+    + CanUse(holder: BaseStatHolder) : bool
+}
+
+package "Core.Abilities" {
+    class AbilityBase implements IAbility {
+        - cooldown : float
+        + Use(holder: BaseStatHolder) : void
+        + CanUse(holder: BaseStatHolder) : bool
+        + ResourceCost { get }
+        ' Clase base para habilidades.
+    }
+    class ProjectileAbility extends AbilityBase {
+        + Use(holder: BaseStatHolder) : void
+        ' Habilidad de proyectil, consume recurso según portador (maná o vida).
+    }
+    class AreaDamageAbility extends AbilityBase {
+        + Use(holder: BaseStatHolder) : void
+        ' Habilidad de daño en área (consume maná).
+    }
+    class HealAbility extends AbilityBase {
+        + Use(holder: BaseStatHolder) : void
+        ' Habilidad de curación (consume vida).
+    }
     class SystemAbility {
-        +AllAbilities : List<AbilityBase>
-        +SelectedAbilityIndex : int
-        +GetAbilityByName(name : string) : AbilityBase
-        +AddAbility(ability : AbilityBase) : void
-        +RemoveAbility(ability : AbilityBase) : void
-        +GetSelectedAbility() : AbilityBase
-        +UseSelectedAbility(user : PlayableStatHolder) : void
+        + CanUse(holder: BaseStatHolder) : bool
+        + GetSelectedAbility() : AbilityBase
+        + UseSelectedAbility(holder: BaseStatHolder) : void
+        + AllAbilities : List<AbilityBase> <<list>>
+        ' Sistema de control de uso de habilidades.
     }
 }
 
-package "Areas.Recovery" {
-    class HealthArea {
-        +healthAmount : int
-        +interval : float
-        +OnTriggerEnter(other : Collider) : void
-        +OnTriggerExit(other : Collider) : void
-        +Update() : void
-    }
+package "Core.Areas" {
     class ManaArea {
-        +manaAmount : int
-        +interval : float
-        +OnTriggerEnter(other : Collider) : void
-        +OnTriggerExit(other : Collider) : void
-        +Update() : void
+        + OnTriggerEnter(holder: BaseStatHolder) : void
+        ' Área que recupera maná.
+    }
+    class HealthArea {
+        + OnTriggerEnter(holder: BaseStatHolder) : void
+        ' Área que recupera vida.
     }
 }
 
-package "Areas.Damage" {
-    class ProjectileDamage {
-        -damage : int
-        +SetDamage(dmg : int) : void
-        +OnTriggerEnter(other : Collider) : void
-    }
+' =========================
+' HERENCIAS E IMPLEMENTACIONES
+' =========================
 
-    class AreaDamage {
-        +damage : int
-        +damageInterval : float
-        +SetDamage(dmg : int) : void
-        +OnTriggerEnter(other : Collider) : void
-        +OnTriggerExit(other : Collider) : void
-        +Update() : void
-    }
-}
+Core.Player.PlayableStatHolder --|> Core.Stats.BaseStatHolder : Herencia
+Core.Player.NonPlayableStatHolder --|> Core.Stats.BaseStatHolder : Herencia
+Core.Abilities.AbilityBase ..|> IAbility : Implementa
+Core.Abilities.ProjectileAbility --|> Core.Abilities.AbilityBase : Herencia
+Core.Abilities.AreaDamageAbility --|> Core.Abilities.AbilityBase : Herencia
+Core.Abilities.HealAbility --|> Core.Abilities.AbilityBase : Herencia
 
-' === RELATIONS WITH EXPLANATION ===
+' =========================
+' ASOCIACIONES Y DEPENDENCIAS
+' =========================
 
-' Herencia
-Base.StatComponent <|-- Components.HealthComponent : "Herencia"
-Base.StatComponent <|-- Components.ManaComponent : "Herencia"
-Base.BaseStatHolder <|-- Player.Holders.PlayableStatHolder : "Herencia"
-Base.BaseStatHolder <|-- Agentes.NPC.NonPlayableStatHolder : "Herencia"
-Player.Holders.PlayableStatHolder <|-- Agentes.SoulMage : "Herencia"
-Player.Holders.PlayableStatHolder <|-- Agentes.ManaKnight : "Herencia"
-Abilities.Base.AbilityBase <|-- Abilities.Habilities.HealAbility : "Herencia"
-Abilities.Base.AbilityBase <|-- Abilities.Habilities.AreaDamageAbility : "Herencia"
-Abilities.Base.AbilityBase <|-- Abilities.Habilities.ProjectileAbility : "Herencia"
+Core.Stats.BaseStatHolder *-- "1" Core.Components.HealthComponent : "Composición\nEncapsulado, acceso controlado"
+Core.Stats.BaseStatHolder *-- "1" Core.Components.ManaComponent : "Composición\nEncapsulado, acceso controlado"
+Core.Player.PlayableStatHolder o-- "*" Core.Abilities.AbilityBase : "Agregación\nHabilidades polimórficas"
+Core.Agents.ManaKnight *-- "1" Core.Player.PlayableStatHolder : "Composición\nPortador jugable"
+Core.Agents.SoulMage *-- "1" Core.Player.PlayableStatHolder : "Composición\nPortador jugable"
+Core.Abilities.AbilityBase ..> Core.Stats.BaseStatHolder : "Dependencia\nUsa recursos del portador"
+Core.Areas.ManaArea ..> Core.Stats.BaseStatHolder : "Dependencia\nRecupera maná"
+Core.Areas.HealthArea ..> Core.Stats.BaseStatHolder : "Dependencia\nRecupera vida"
+Core.Abilities.SystemAbility ..> Core.Stats.BaseStatHolder : "Dependencia\nVerifica si puede usar habilidad"
 
-' Asociación
-Base.BaseStatHolder -- Components.HealthComponent : "Asociación health"
-Player.Holders.PlayableStatHolder -- Components.ManaComponent : "Asociación mana"
-Player.Holders.PlayableStatHolder -- Abilities.System.SystemAbility : "Asociación AbilitySystem"
-Components.ManaComponent -- Enums.ManaCondition : "Asociación Condition"
+' =========================
+' RELACIONES DE USO DE EVENTOS
+' =========================
 
-' Composición: SystemAbility contiene de 1 a n habilidades
-Abilities.System.SystemAbility "1" *-- "*" Abilities.Base.AbilityBase : "AllAbilities"
+Core.Player.NonPlayableStatHolder ..> Core.Player.NonPlayableStatHolder::OnDeath : "Suscripción a evento de muerte"
 
-' Asociación débil / uso
-Areas.Recovery.HealthArea ..> Components.HealthComponent : "uso OnTriggerEnter/Exit/Update"
-Areas.Recovery.ManaArea ..> Components.ManaComponent : "uso OnTriggerEnter/Exit/Update"
-Areas.Damage.ProjectileDamage ..> Components.HealthComponent : "uso OnTriggerEnter"
-Areas.Damage.AreaDamage ..> Components.HealthComponent : "uso OnTriggerEnter/Exit/Update"
+' =========================
+' NOTAS Y ACLARACIONES
+' =========================
+
+note right of Core.Components.ManaComponent
+  - El campo 'condition' controla el modo de afectación del maná.
+  - El método AffectValue puede ser instantáneo o por tiempo.
+  - No se exponen setters públicos para recursos críticos.
+end note
+
+note right of Core.Player.PlayableStatHolder
+  - RobustInitialize asegura referencias correctas y seguras.
+  - No expone setters públicos para campos sensibles.
+  - El acceso a habilidades es solo lectura externa.
+end note
+
+note right of Core.Abilities.AbilityBase
+  - Las habilidades usan polimorfismo para consumir vida o maná
+    según el tipo de portador (ManaKnight o SoulMage).
+  - HealAbility consume vida, AreaDamageAbility y ProjectileAbility consumen maná.
+  - El sistema es extensible para nuevas habilidades.
+end note
+
+note right of Core.Player.NonPlayableStatHolder
+  - Los NPCs pueden suscribirse a eventos de muerte (OnDeath) para lógica de IA o efectos.
+  - Se recomienda manejar la lógica de muerte mediante eventos para desacoplar sistemas.
+end note
+
+note as N1
+  - Todas las colecciones se representan con <<list>>.
+  - Los métodos de acceso (getters) se muestran como propiedades { get }.
+  - Las composiciones se muestran con *-- y las agregaciones con o--.
+  - El diagrama está organizado en paquetes para reflejar la estructura del proyecto.
+end note
 
 @enduml

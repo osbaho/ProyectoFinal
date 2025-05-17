@@ -1,5 +1,6 @@
 using UnityEngine;
 using Components;
+using Base;
 
 public class AreaHealingTimer : MonoBehaviour
 {
@@ -12,10 +13,13 @@ public class AreaHealingTimer : MonoBehaviour
     {
         this.healAmount = healAmount;
         this.healInterval = interval;
-        healthComponent = GetComponent<HealthComponent>();
+        healthComponent = null;
+        var statHolder = GetComponent<BaseStatHolder>();
+        if (statHolder != null)
+            healthComponent = statHolder.Health;
         if (healthComponent == null)
         {
-            Debug.LogWarning("AreaHealingTimer: No se encontró HealthComponent en el objeto.");
+            Debug.LogWarning("AreaHealingTimer: No se encontró HealthComponent en el objeto (vía BaseStatHolder).");
             Destroy(this);
         }
     }
