@@ -4,24 +4,30 @@ using Base;
 using Components;
 using Abilities;
 
-/// <summary>
-/// Portador jugable: puede tener habilidades, vida y/o maná por asociación.
-/// </summary>
-
 namespace Holders
 {
-    // El nombre de la clase debe coincidir con el nombre del archivo para evitar errores de compilación.
-    // Asegúrate de que el archivo se llame PlayableStatHolder.cs y esté en la misma carpeta que este código.
-    // Si cambias el nombre de la clase, también debes cambiar el nombre del archivo para que coincida con el nuevo
-
+    /// <summary>
+    /// Portador jugable: puede tener habilidades, vida y/o maná por asociación.
+    /// </summary>
     public class PlayableStatHolder : BaseStatHolder
     {
         [SerializeField] private ManaComponent mana;
+        [SerializeField] private GameObject explosionVFXPrefab;
+        [SerializeField] private GameObject projectilePrefab;
 
-        [Header("Abilities")]
-        public SystemAbility AbilitySystem = new SystemAbility();
+        [System.NonSerialized]
+        private readonly SystemAbility abilitySystem = new SystemAbility();
 
-        public ManaComponent Mana => mana;
+        public SystemAbility AbilitySystem => abilitySystem;
+        public ManaComponent Mana
+        {
+            get
+            {
+                if (mana == null)
+                    mana = GetComponentInChildren<ManaComponent>();
+                return mana;
+            }
+        }
 
         public void Initialize(HealthComponent health = null, ManaComponent mana = null)
         {
@@ -38,34 +44,44 @@ namespace Holders
 
         public void AddAbility(AbilityBase ability)
         {
-            AbilitySystem.AddAbility(ability);
+            if (ability != null)
+                abilitySystem.AddAbility(ability);
         }
 
         public void RemoveAbility(AbilityBase ability)
         {
-            AbilitySystem.RemoveAbility(ability);
+            if (ability != null)
+                abilitySystem.RemoveAbility(ability);
         }
 
-        public void UseAbility(int index)
+        public bool UseAbility(int index)
         {
-            AbilitySystem.SelectedAbilityIndex = index;
-            AbilitySystem.UseSelectedAbility(this);
+            abilitySystem.SelectedAbilityIndex = index;
+            var ability = abilitySystem.GetSelectedAbility();
+            if (ability != null && ability.CanUse(this))
+            {
+                abilitySystem.UseSelectedAbility(this);
+                return true;
+            }
+            return false;
         }
 
         public override void TakeDamage(int amount)
         {
-            Health?.TakeDamage(amount);
+            Health?.AffectValue(-amount);
         }
 
-        public void InitializeAbilities(Sprite healIcon, Sprite areaIcon, Sprite projectileIcon, GameObject projectilePrefab)
+        public void InitializeAbilities(Sprite healIcon, Sprite areaIcon, Sprite projectileIcon)
         {
-            var heal = new HealAbility("Curar", healIcon, resourceCost: 20);
-            var area = new AreaDamageAbility("Explosión", areaIcon, radius: 5f, damage: 30, resourceCost: 30);
-            var projectile = new ProjectileAbility("Disparo", projectileIcon, projectilePrefab, projectileSpeed: 20f, resourceCost: 10);
+            var heal = new HealAbility("Curar", healIcon, 3, 15);
+            var area = new AreaDamageAbility("Explosión", areaIcon, 10, 69, 20, 69, explosionVFXPrefab);
+            var projectile = new ProjectileAbility("Hachazo", projectileIcon, 4, 5, projectilePrefab, 20, 20);
 
             AddAbility(heal);
             AddAbility(area);
             AddAbility(projectile);
+
+            Debug.Log($"PlayableStatHolder: habilidades inicializadas, total: {abilitySystem.AllAbilities.Count}");
         }
     }
 }

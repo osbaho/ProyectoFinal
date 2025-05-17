@@ -126,7 +126,7 @@ Shader "Vefects/SH_Vefects_VFX_SRP_Particles_Erosion_01"
 
 		ENDCG
 	}
-	CustomEditor "ASEMaterialInspector"
+	//CustomEditor "ASEMaterialInspector"
 }
 /*ASEBEGIN
 Version=19105

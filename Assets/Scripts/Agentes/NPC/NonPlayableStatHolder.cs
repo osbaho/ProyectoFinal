@@ -12,14 +12,13 @@ public class NonPlayableStatHolder : BaseStatHolder
 
     private void Update()
     {
-        // Chequea la muerte cada frame
         if (Health != null && Health.CurrentValue <= 0)
         {
             OnDeath?.Invoke();
             Destroy(gameObject);
         }
     }
-    // Llama a este método desde donde corresponda cuando la vida cambie.
+
     public void CheckDeath()
     {
         if (Health != null && Health.CurrentValue <= 0)

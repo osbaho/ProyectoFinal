@@ -4,32 +4,49 @@ using Holders;
 
 public abstract class AbilityBase
 {
-    public string Name { get; protected set; }
-    public Sprite Icon { get; protected set; }
-    public float Cooldown { get; protected set; }
+    private readonly string _name;
+    private readonly Sprite _icon;
+    private readonly float _cooldown;
+    private readonly int _resourceCost;
+    [System.NonSerialized]
     protected float lastUseTime;
-    public int ResourceCost { get; protected set; }
+
+    public string Name => _name;
+    public Sprite Icon => _icon;
+    public float Cooldown => _cooldown;
+    public int ResourceCost => _resourceCost;
+
+    protected AbilityBase(string name, Sprite icon, float cooldown, int resourceCost)
+    {
+        _name = name;
+        _icon = icon;
+        _cooldown = cooldown;
+        lastUseTime = 0f;
+        _resourceCost = resourceCost;
+    }
 
     public virtual bool CanUse(PlayableStatHolder user)
     {
-        // Verifica cooldown
-        if (Time.time < lastUseTime + Cooldown)
+        if (Time.time < lastUseTime + _cooldown)
             return false;
-
-        // Ya no verifica recursos por IResourceUser aquí
+        // Si la habilidad requiere maná, verifica que haya suficiente
+        if (ResourceCost > 0 && user != null && user.Mana != null && user.Mana.CurrentValue < ResourceCost)
+            return false;
         return true;
     }
 
     public virtual void Use(PlayableStatHolder user)
     {
-        if (!CanUse(user)) return;
+        if (!CanUse(user))
+        {
+            Debug.Log($"AbilityBase: No se puede usar {Name} (cooldown o condición)");
+            return;
+        }
+        // Solo se actualiza el cooldown si la habilidad se usa realmente
         lastUseTime = Time.time;
-
-        // Ya no consume recursos por IResourceUser aquí
-
-        OnAbilityEffect(user); // Aquí se ejecuta el efecto concreto de la habilidad
+        Debug.Log($"AbilityBase: Usando habilidad {Name}");
+        OnAbilityEffect(user);
     }
 
-    // Método abstracto que define el efecto concreto de la habilidad
     protected abstract void OnAbilityEffect(PlayableStatHolder user);
 }

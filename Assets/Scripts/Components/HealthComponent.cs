@@ -1,24 +1,16 @@
 using System;
-using Interfaces;
 using Base;
+using UnityEngine;
 
 namespace Components
 {
+    [Serializable]
     public class HealthComponent : StatComponent
     {
         public override void AffectValue(int value)
         {
-            // Puedes personalizar la lógica aquí si lo deseas
             base.AffectValue(value);
+            Debug.Log($"HealthComponent: Vida actual = {CurrentValue}");
         }
-        public void TakeDamage(int amount)
-        {
-            AffectValue(-amount);
-        }
-        public void Heal(int amount)
-        {
-            AffectValue(amount);
-        }
-        
     }
 }

@@ -1,43 +1,42 @@
 using UnityEngine;
-using Components;
-using System.Collections.Generic;
+using Base;
 
 public class HealthArea : MonoBehaviour
 {
-    public int healthAmount = 20;
-    public float interval = 2f;
-
-    private readonly Dictionary<HealthComponent, float> inside = new();
+    [Tooltip("Cantidad de vida curada al entrar en el área")]
+    public int healAmount = 10;
+    [Tooltip("Intervalo en segundos para aplicar curación continua")]
+    public float healInterval = 1f;
 
     private void OnTriggerEnter(Collider other)
     {
-        var health = other.GetComponent<HealthComponent>();
-        if (health != null && !inside.ContainsKey(health))
+        Debug.Log($"HealthArea: OnTriggerEnter con {other.gameObject.name}");
+        var health = other.GetComponent<BaseStatHolder>().Health;
+        if (health != null)
         {
-            health.Heal(healthAmount); // Cura al entrar
-            inside[health] = 0f;
+            health.AffectValue(healAmount);
+
+            // Evita duplicados
+            var existingTimer = other.GetComponent<AreaHealingTimer>();
+            if (existingTimer == null)
+            {
+                var timer = other.gameObject.AddComponent<AreaHealingTimer>();
+                timer.Init(healAmount, healInterval);
+            }
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        var health = other.GetComponent<HealthComponent>();
-        if (health != null && inside.ContainsKey(health))
+        Debug.Log($"HealthArea: OnTriggerExit con {other.gameObject.name}");
+        var health = other.GetComponent<BaseStatHolder>().Health;
+        if (health != null)
         {
-            inside.Remove(health);
-        }
-    }
-
-    private void Update()
-    {
-        var keys = new List<HealthComponent>(inside.Keys);
-        foreach (var health in keys)
-        {
-            inside[health] += Time.deltaTime;
-            if (inside[health] >= interval)
+            var timer = other.GetComponent<AreaHealingTimer>();
+            if (timer != null)
             {
-                health.Heal(healthAmount);
-                inside[health] = 0f;
+                Destroy(timer);
+                Debug.Log($"HealthArea: {other.gameObject.name} ha salido del área de curación. Curación continua detenida.");
             }
         }
     }

@@ -1,3 +1,4 @@
+using UnityEngine;
 using Components;
 using Holders;
 
@@ -6,13 +7,12 @@ using Holders;
 /// </summary>
 public class ManaKnight : PlayableStatHolder
 {
-    public ManaComponent ManaComponent;
-
+    // Usa la propiedad Mana heredada de PlayableStatHolder
     public void UseMana(int amount)
     {
-        ManaComponent?.UseResource(amount);
+        Mana?.AffectValue(-amount);
     }
 
-    public int GetCurrentMana() => ManaComponent != null ? ManaComponent.CurrentValue : 0;
-    public int GetMaxMana() => ManaComponent != null ? ManaComponent.MaxValue : 0;
+    public int GetCurrentMana() => Mana != null ? Mana.CurrentValue : 0;
+    public int GetMaxMana() => Mana != null ? Mana.MaxValue : 0;
 }

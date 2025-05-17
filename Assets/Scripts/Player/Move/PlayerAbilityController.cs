@@ -1,5 +1,6 @@
 using UnityEngine;
 using Holders;
+using System.Linq;
 
 public class PlayerAbilityController : MonoBehaviour
 {
@@ -14,14 +15,27 @@ public class PlayerAbilityController : MonoBehaviour
 
     private void Awake()
     {
+        // Busca el input handler en toda la escena (singleton)
         inputHandler = PlayerInputHandler.Instance;
-        statHolder = GetComponent<PlayableStatHolder>();
+        // Busca el statHolder en este objeto o en hijos
+        statHolder = GetComponentInChildren<PlayableStatHolder>();
+        // No busques PlayerUI aquí
+    }
+
+    private void Start()
+    {
+        // Busca la UI en toda la escena
         playerUI = Object.FindFirstObjectByType<PlayerUI>();
+        if (statHolder == null)
+            Debug.LogWarning("PlayerAbilityController: Falta PlayableStatHolder (ni en este objeto ni en hijos).");
+        if (playerUI == null)
+            Debug.LogWarning("PlayerAbilityController: Falta PlayerUI.");
     }
 
     private void OnEnable()
     {
-        if (inputHandler != null) {
+        if (inputHandler != null)
+        {
             inputHandler.OnHabilidad1Pressed += OnHabilidad1;
             inputHandler.OnHabilidad2Pressed += OnHabilidad2;
             inputHandler.OnHabilidad3Pressed += OnHabilidad3;
@@ -30,39 +44,53 @@ public class PlayerAbilityController : MonoBehaviour
 
     private void OnDisable()
     {
-        if (inputHandler != null) {
+        if (inputHandler != null)
+        {
             inputHandler.OnHabilidad1Pressed -= OnHabilidad1;
             inputHandler.OnHabilidad2Pressed -= OnHabilidad2;
             inputHandler.OnHabilidad3Pressed -= OnHabilidad3;
         }
     }
 
-    private void UseAbilityAndShowCooldown(int index)
-    {
-        if (statHolder != null)
-        {
-            var ability = statHolder.AbilitySystem.AllAbilities.Count > index ? statHolder.AbilitySystem.AllAbilities[index] : null;
-            if (ability != null)
-            {
-                statHolder.UseAbility(index);
-                if (playerUI != null)
-                    playerUI.TriggerAbilityCooldown(index, ability.Cooldown);
-            }
-        }
-    }
-
     private void OnHabilidad1()
     {
-        UseAbilityAndShowCooldown(ProjectileAbilityIndex);
+        Debug.Log("PlayerAbilityController: OnHabilidad1 invocado");
+        UseAbilityAndShowCooldown(0);
     }
-
     private void OnHabilidad2()
     {
-        UseAbilityAndShowCooldown(HealAbilityIndex);
+        Debug.Log("PlayerAbilityController: OnHabilidad2 invocado");
+        UseAbilityAndShowCooldown(1);
     }
-
     private void OnHabilidad3()
     {
-        UseAbilityAndShowCooldown(AreaDamageAbilityIndex);
+        Debug.Log("PlayerAbilityController: OnHabilidad3 invocado");
+        UseAbilityAndShowCooldown(2);
+    }
+
+    private void UseAbilityAndShowCooldown(int index)
+    {
+        Debug.Log($"PlayerAbilityController: Intentando usar habilidad {index}");
+        if (statHolder != null)
+        {
+            var abilities = statHolder.AbilitySystem.AllAbilities;
+            var ability = abilities.Count > index ? abilities[index] : null;
+            if (ability != null)
+            {
+                Debug.Log($"PlayerAbilityController: Usando habilidad {ability.Name}");
+                bool used = statHolder.UseAbility(index);
+                if (used && playerUI != null)
+                    playerUI.TriggerAbilityCooldown(index, ability.Cooldown);
+            }
+            else
+            {
+                string abilityNames = abilities.Count > 0 ? string.Join(", ", abilities.Select(a => a.Name)) : "Ninguna";
+                Debug.LogWarning($"PlayerAbilityController: No hay habilidad en el índice {index}. Total habilidades: {abilities.Count}. Habilidades: {abilityNames}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("PlayerAbilityController: statHolder es null");
+        }
     }
 }

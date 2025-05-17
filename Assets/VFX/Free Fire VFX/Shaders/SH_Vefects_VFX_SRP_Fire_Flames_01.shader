@@ -128,7 +128,7 @@ Shader "Vefects/SH_Vefects_VFX_SRP_Fire_Flames_01"
 
 		ENDCG
 	}
-	CustomEditor "ASEMaterialInspector"
+	//CustomEditor "ASEMaterialInspector"
 }
 /*ASEBEGIN
 Version=19105

@@ -1,44 +1,43 @@
 using UnityEngine;
+using Holders;
 using Components;
+using System.Collections;
 using System.Collections.Generic;
 
 public class ManaArea : MonoBehaviour
 {
     public int manaAmount = 20;
-    public float interval = 2f;
+    public float interval = 1f;
 
-    private readonly Dictionary<ManaComponent, float> inside = new();
+    private Dictionary<ManaComponent, Coroutine> manaCoroutines = new();
 
     private void OnTriggerEnter(Collider other)
     {
-        var mana = other.GetComponent<ManaComponent>();
-        if (mana != null && !inside.ContainsKey(mana))
+        var mana = other.GetComponentInChildren<ManaComponent>();
+        if (mana != null && !manaCoroutines.ContainsKey(mana))
         {
-            mana.RecoverResource(manaAmount); // Recupera al entrar
-            inside[mana] = 0f;
+            Coroutine coroutine = StartCoroutine(ManaCoroutine(mana));
+            manaCoroutines.Add(mana, coroutine);
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        var mana = other.GetComponent<ManaComponent>();
-        if (mana != null && inside.ContainsKey(mana))
+        var mana = other.GetComponent<PlayableStatHolder>().Mana;
+        if (mana != null && manaCoroutines.TryGetValue(mana, out Coroutine coroutine))
         {
-            inside.Remove(mana);
+            StopCoroutine(coroutine);
+            manaCoroutines.Remove(mana);
         }
     }
 
-    private void Update()
+    private IEnumerator ManaCoroutine(ManaComponent mana)
     {
-        var keys = new List<ManaComponent>(inside.Keys);
-        foreach (var mana in keys)
+        while (true)
         {
-            inside[mana] += Time.deltaTime;
-            if (inside[mana] >= interval)
-            {
-                mana.RecoverResource(manaAmount);
-                inside[mana] = 0f;
-            }
+            mana.AffectValue(manaAmount, Enums.ManaCondition.Instant);
+            Debug.Log($"Recupera {manaAmount} de maná en el área de recuperación.");
+            yield return new WaitForSeconds(interval);
         }
     }
 }

@@ -46,18 +46,31 @@ public class PlayerInputHandler : MonoBehaviour, IPlayerInput
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
         }
+        Instance = this;
 
+        if (transform.parent != null)
+        {
+            transform.SetParent(null); // Lo hace root antes de llamar a DontDestroyOnLoad
+            // Ya no es necesario mostrar el warning, el objeto ya es root.
+        }
+        DontDestroyOnLoad(gameObject);
+
+        if (playerControls == null)
+        {
+            Debug.LogError("PlayerInputHandler: Falta InputActionAsset.");
+            return;
+        }
         var actionMap = playerControls.FindActionMap(actionMapName);
+        if (actionMap == null)
+        {
+            Debug.LogError($"PlayerInputHandler: No se encontró ActionMap '{actionMapName}'.");
+            return;
+        }
 
         moveAction = actionMap.FindAction(move);
         lookAction = actionMap.FindAction(look);
@@ -70,8 +83,38 @@ public class PlayerInputHandler : MonoBehaviour, IPlayerInput
         RegisterInputActions();
     }
 
+    private void OnDestroy()
+    {
+        // Limpieza de eventos para evitar fugas de memoria
+        OnHabilidad1Pressed = null;
+        OnHabilidad2Pressed = null;
+        OnHabilidad3Pressed = null;
+    }
+
     void RegisterInputActions()
     {
+        if (moveAction == null)
+            Debug.LogError("PlayerInputHandler: Falta la acción de input 'Move'.");
+        if (lookAction == null)
+            Debug.LogError("PlayerInputHandler: Falta la acción de input 'Look'.");
+        if (jumpAction == null)
+            Debug.LogError("PlayerInputHandler: Falta la acción de input 'Jump'.");
+        if (sprintAction == null)
+            Debug.LogError("PlayerInputHandler: Falta la acción de input 'Sprint'.");
+        if (habilidad1Action == null)
+            Debug.LogError("PlayerInputHandler: Falta la acción de input 'Habilidad1'.");
+        if (habilidad2Action == null)
+            Debug.LogError("PlayerInputHandler: Falta la acción de input 'Habilidad2'.");
+        if (habilidad3Action == null)
+            Debug.LogError("PlayerInputHandler: Falta la acción de input 'Habilidad3'.");
+
+        if (moveAction == null || lookAction == null || jumpAction == null || sprintAction == null ||
+            habilidad1Action == null || habilidad2Action == null || habilidad3Action == null)
+        {
+            Debug.LogError("PlayerInputHandler: Falta alguna acción de input. Revisa el InputActionAsset y los nombres en el inspector.");
+            return;
+        }
+
         moveAction.performed += ctx => MoveInput = ctx.ReadValue<Vector2>();
         moveAction.canceled += ctx => MoveInput = Vector2.zero;
 
@@ -105,23 +148,23 @@ public class PlayerInputHandler : MonoBehaviour, IPlayerInput
 
     private void OnEnable()
     {
-        moveAction.Enable();
-        lookAction.Enable();
-        jumpAction.Enable();
-        sprintAction.Enable();
-        habilidad1Action.Enable();
-        habilidad2Action.Enable();
-        habilidad3Action.Enable();
+        moveAction?.Enable();
+        lookAction?.Enable();
+        jumpAction?.Enable();
+        sprintAction?.Enable();
+        habilidad1Action?.Enable();
+        habilidad2Action?.Enable();
+        habilidad3Action?.Enable();
     }
 
     private void OnDisable()
     {
-        moveAction.Disable();
-        lookAction.Disable();
-        jumpAction.Disable();
-        sprintAction.Disable();
-        habilidad1Action.Disable();
-        habilidad2Action.Disable(); 
-        habilidad3Action.Disable();
+        moveAction?.Disable();
+        lookAction?.Disable();
+        jumpAction?.Disable();
+        sprintAction?.Disable();
+        habilidad1Action?.Disable();
+        habilidad2Action?.Disable(); 
+        habilidad3Action?.Disable();
     }
 }

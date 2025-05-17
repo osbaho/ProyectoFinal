@@ -1,54 +1,70 @@
 using System;
+using System.Threading.Tasks;
 using Base;
 using Enums;
+using UnityEngine;
 
 namespace Components
 {
+    [Serializable]
     public class ManaComponent : StatComponent
     {
         private ManaCondition _condition = ManaCondition.ByTime;
         public ManaCondition Condition
         {
             get => _condition;
-            set => _condition = value;
-        }        
+            private set => _condition = value;
+        }
 
-        private float _timeSinceLastIncrement = 0f;
+        public void SetCondition(ManaCondition condition)
+        {
+            _condition = condition;
+        }
+
+        private uint flowSpeed = 1;
 
         public override void AffectValue(int value)
         {
-            switch (Condition)
+            ExecuteAffectCondition(value, _condition);
+        }
+
+        public void AffectValue(int value, ManaCondition customCondition = ManaCondition.None)
+        {
+            if (customCondition == ManaCondition.None)
+            {
+                ExecuteAffectCondition(value, _condition);
+                return;
+            }
+            ExecuteAffectCondition(value, customCondition);
+        }
+
+        private void ExecuteAffectCondition(int value, ManaCondition condition)
+        {
+            switch (condition)
             {
                 case ManaCondition.None:
                     // No se aplica ningún efecto
                     break;
                 case ManaCondition.ByTime:
-                    // Incrementa el valor cada 2 segundos
-                    if (_timeSinceLastIncrement >= 2f)
-                    {
-                        base.AffectValue(value);
-                        _timeSinceLastIncrement = 0f;
-                    }
+                    ManaCycle(value);
                     break;
                 case ManaCondition.Instant:
-                    base.AffectValue(value);
+                    base.AffectValue(value); // Esto dispara el evento OnValueChanged
                     break;
             }
         }
 
-        public void RecoverResource(int amount)
+        private async void ManaCycle(int value)
         {
-            AffectValue(amount);
-        }
+            int flowAmount = Mathf.Abs(value);
+            int sign = Math.Sign(value);
 
-        public void UseResource(int amount)
-        {
-            AffectValue(-amount);
-        }
-
-        public void SetCondition(ManaCondition condition)
-        {
-            Condition = condition;
+            while (flowAmount > 0)
+            {
+                await Task.Delay(1000); // Espera 1 segundo
+                flowAmount -= (int)flowSpeed; // Disminuye el flujo de mana
+                base.AffectValue((int)(flowSpeed * sign)); // Aumenta el mana en 1
+            }
         }
     }
 }

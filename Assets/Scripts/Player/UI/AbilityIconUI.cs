@@ -3,18 +3,35 @@ using UnityEngine.UI;
 
 public class AbilityIconUI : MonoBehaviour
 {
-    public Image iconImage;
-    public Image cooldownRadial;
-    private Color normalColor = Color.white;
+    [SerializeField] private Image iconImage;
+    [SerializeField] private Image cooldownRadial;
+
+    private Color normalColor;
     private Color cooldownColor = Color.gray;
     private float cooldownTime = 0f;
     private float cooldownLeft = 0f;
     private bool isOnCooldown = false;
+    private Sprite originalSprite;
+
+    void Start()
+    {
+        if (iconImage != null)
+            normalColor = iconImage.color;
+        else
+            normalColor = Color.white;
+    }
 
     public void SetIcon(Sprite sprite)
     {
         if (iconImage != null)
+        {
             iconImage.sprite = sprite;
+            originalSprite = sprite; // Siempre actualiza el sprite base aquí
+        }
+        else
+        {
+            Debug.LogWarning("AbilityIconUI: iconImage no asignado.");
+        }
     }
 
     public void StartCooldown(float cooldown)
@@ -24,7 +41,10 @@ public class AbilityIconUI : MonoBehaviour
         isOnCooldown = true;
         SetGrayscale(true);
         if (cooldownRadial != null)
+        {
+            cooldownRadial.gameObject.SetActive(true);
             cooldownRadial.fillAmount = 1f;
+        }
     }
 
     void Update()
@@ -40,7 +60,13 @@ public class AbilityIconUI : MonoBehaviour
                 isOnCooldown = false;
                 SetGrayscale(false);
                 if (cooldownRadial != null)
+                {
                     cooldownRadial.fillAmount = 0f;
+                    cooldownRadial.gameObject.SetActive(false);
+                }
+                // Solo restaura el sprite si está vacío
+                if (iconImage != null && iconImage.sprite == null && originalSprite != null)
+                    iconImage.sprite = originalSprite;
             }
         }
     }

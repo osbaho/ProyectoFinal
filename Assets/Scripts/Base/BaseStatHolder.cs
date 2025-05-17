@@ -6,17 +6,19 @@ namespace Base
 {
     public abstract class BaseStatHolder : MonoBehaviour
     {
-        // Parámetros comunes para todos los holders
         [Header("Stats")]
-        [SerializeField] protected HealthComponent health;
+        [SerializeField] private HealthComponent health;
 
-        // Permite acceso público de solo lectura a health
         public HealthComponent Health => health;
 
-        // Método común para recibir daño
+        protected virtual void Awake()
+        {
+            health.Awake();
+        }
+
         public virtual void TakeDamage(int amount)
         {
-            Health?.TakeDamage(amount);
+            health?.AffectValue(-amount);
         }
     }
 }

@@ -6,59 +6,43 @@ using Utils;
 
 public class PlayerUI : MonoBehaviour
 {
-    public Slider healthBar;
-    public Slider resourceBar;
+    [SerializeField] private Image healthFill;
+    [SerializeField] private Image resourceFill;
 
-    public MonoBehaviour playerComponent;
+    public void SetStatHolder(PlayableStatHolder statHolder)
+    {
+        if (psh != null || statHolder == null) return;
+        psh = statHolder;
+        Initialize();
+    }
+
     private HealthComponent health;
     private ManaComponent mana;
 
-    public AbilityIconUI[] abilityIcons; // Asigna en el inspector, orden: Heal, Area, Projectile
+    [SerializeField] private AbilityIconUI[] abilityIcons; // Asigna en el inspector, orden: Heal, Area, Projectile
 
     private PlayableStatHolder psh;
 
-    void Start()
-    {
-        var holderMB = playerComponent as MonoBehaviour;
-        PlayableStatHolder psh = null;
+    public void Initialize()
+    {        
+        health = psh.Health;
+        mana = psh.Mana;
+        SetupAbilityIcons();
+        
+        if (healthFill == null)
+            Debug.LogWarning("PlayerUI: healthFill no asignado.");
+        if (resourceFill == null)
+            Debug.LogWarning("PlayerUI: resourceFill no asignado.");
 
-        if (playerComponent is PlayableStatHolder p)
+        if (health != null)
         {
-            psh = p;
-            health = psh.Health;
-            mana = psh.Mana;
-            SetupAbilityIcons();
+            UpdateHealthBar(health.CurrentValue, health.MaxValue);
+            health.OnValueChanged += OnHealthChanged;
         }
-        else if (playerComponent is NonPlayableStatHolder npsh)
+        if (mana != null)
         {
-            health = npsh.Health;
-            mana = null;
-        }
-        else if (holderMB != null)
-        {
-            health = holderMB.GetComponent<HealthComponent>();
-            mana = holderMB.GetComponent<ManaComponent>();
-        }
-        else
-        {
-            Debug.LogError("PlayerUI: playerComponent no es un tipo válido.");
-            health = null;
-            mana = null;
-        }
-
-        if (playerComponent != null)
-        {
-            if (health != null)
-            {
-                UpdateHealthBar(health.CurrentValue, health.MaxValue);
-                // Suscribirse a cambios de vida si existe el evento
-                health.OnValueChanged += OnHealthChanged;
-            }
-            if (mana != null)
-            {
-                UpdateResourceBar(mana.CurrentValue, mana.MaxValue);
-                mana.OnValueChanged += OnManaChanged;
-            }
+            UpdateResourceBar(mana.CurrentValue, mana.MaxValue);
+            mana.OnValueChanged += OnManaChanged;
         }
     }
 
@@ -100,11 +84,13 @@ public class PlayerUI : MonoBehaviour
 
     public void UpdateHealthBar(int current, int max)
     {
-        UIUtils.SetSliderValue(healthBar, current, max);
+        if (healthFill != null)
+            UIUtils.SetFillAmount(healthFill, current, max);
     }
 
     public void UpdateResourceBar(int current, int max)
     {
-        UIUtils.SetSliderValue(resourceBar, current, max);
+        if (resourceFill != null)
+            UIUtils.SetFillAmount(resourceFill, current, max);
     }
 }

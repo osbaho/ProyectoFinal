@@ -81,7 +81,7 @@ Shader "Vefects/SH_Vefects_VFX_SRP_Heat_Haze_01"
 
 		ENDCG
 	}
-	CustomEditor "ASEMaterialInspector"
+	//CustomEditor "ASEMaterialInspector"
 }
 /*ASEBEGIN
 Version=19105

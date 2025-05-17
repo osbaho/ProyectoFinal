@@ -19,9 +19,15 @@ public class AnimatedTorchLightWithCurve : MonoBehaviour
 
     void Start()
     {
-        // Se obtiene el componente Light si no fue asignado explícitamente
         if (torchLight == null)
             torchLight = GetComponent<Light>();
+
+        if (torchLight == null)
+        {
+            Debug.LogWarning("AnimatedTorchLightWithCurve: No se encontró componente Light.");
+            enabled = false;
+            return;
+        }
 
         torchLight.intensity = baseIntensity;
         torchLight.color = coolColor;
@@ -29,6 +35,8 @@ public class AnimatedTorchLightWithCurve : MonoBehaviour
 
     void Update()
     {
+        if (torchLight == null) return;
+
         // Parpadeo de intensidad: usamos Perlin Noise para suavidad en la fluctuación
         float intensityNoise = Mathf.PerlinNoise(Time.time * flickerSpeed, 0.0f);
         torchLight.intensity = baseIntensity + intensityNoise * flickerIntensity;

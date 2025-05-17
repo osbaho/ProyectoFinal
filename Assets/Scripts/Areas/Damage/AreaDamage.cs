@@ -1,6 +1,6 @@
 using UnityEngine;
-using System.Collections.Generic;
 using Components;
+using Base;
 
 public class AreaDamage : MonoBehaviour
 {
@@ -9,42 +9,24 @@ public class AreaDamage : MonoBehaviour
     [Tooltip("Intervalo en segundos para aplicar daño continuo")]
     public float damageInterval = 1f;
 
-    // Almacena los objetos dentro del trigger y su tiempo acumulado
-    private readonly Dictionary<HealthComponent, float> inside = new();
-
-    public void SetDamage(int dmg) => damage = dmg;
-
     private void OnTriggerEnter(Collider other)
     {
-        var health = other.GetComponent<HealthComponent>();
-        if (health != null && !inside.ContainsKey(health))
+        Debug.Log($"AreaDamage: OnTriggerEnter con {other.gameObject.name}");
+        var health = other.GetComponent<BaseStatHolder>().Health;
+        if (health != null)
         {
-            health.TakeDamage(damage); // Daño inmediato al entrar
-            inside[health] = 0f; // Inicia el temporizador para daño continuo
+            health.AffectValue(-damage); // Daño inmediato al entrar
+            Debug.Log($"AreaDamage: {other.gameObject.name} recibió {damage} de daño al entrar en el área.");
+
+            AreaDamageTimer timer = other.gameObject.AddComponent<AreaDamageTimer>();
+            timer.Init(damage, damageInterval); // Inicializa con los valores del área
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        var health = other.GetComponent<HealthComponent>();
-        if (health != null && inside.ContainsKey(health))
-        {
-            inside.Remove(health);
-        }
-    }
-
-    private void Update()
-    {
-        // Copia para evitar modificación durante la iteración
-        var keys = new List<HealthComponent>(inside.Keys);
-        foreach (var health in keys)
-        {
-            inside[health] += Time.deltaTime;
-            if (inside[health] >= damageInterval)
-            {
-                health.TakeDamage(damage);
-                inside[health] = 0f;
-            }
-        }
+        var timer = other.GetComponent<AreaDamageTimer>();
+        if (timer != null)
+            Destroy(timer);
     }
 }

@@ -1,13 +1,14 @@
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Utils
 {
     public static class UIUtils
     {
-        public static void SetSliderValue(Slider slider, int current, int max)
+        public static void SetFillAmount(Image image, int current, int max)
         {
-            if (slider != null)
-                slider.value = (float)current / (max > 0 ? max : 1f);
+            if (image != null)
+                image.fillAmount = (float)current / (max > 0 ? max : 1f);
         }
     }
 }

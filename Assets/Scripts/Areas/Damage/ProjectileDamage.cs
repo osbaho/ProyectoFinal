@@ -9,16 +9,29 @@ using Components;
 /// </summary>
 public class ProjectileDamage : MonoBehaviour
 {
-    private int damage;
+    private int damage = 0;
+    private GameObject owner;
 
-    public void SetDamage(int dmg) => damage = dmg;
+    public void SetDamage(int dmg)
+    {
+        damage = Mathf.Max(0, dmg);
+    }
+
+    public void SetOwner(GameObject ownerObj)
+    {
+        owner = ownerObj;
+    }
 
     private void OnTriggerEnter(Collider other)
     {
+        // Evita dañar al lanzador
+        if (owner != null && other.gameObject == owner)
+            return;
+
         var health = other.GetComponent<HealthComponent>();
-        if (health != null)
+        if (health != null && damage > 0)
         {
-            health.TakeDamage(damage);
+            health.AffectValue(-damage);
             Destroy(gameObject);
         }
     }
